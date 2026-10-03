@@ -8,7 +8,14 @@ import {
   Download,
 } from 'lucide-react';
 import { ConsultationDossier } from '../types';
-import { CAMPAIGN_ASSETS, getColours, getFitPreferences, getSilhouettes, getStyles } from '../data/atelierContent';
+import {
+  CAMPAIGN_ASSETS,
+  getColours,
+  getFitPreferences,
+  getOccasions,
+  getSilhouettes,
+  getStyles,
+} from '../data/atelierContent';
 import { SupportedLanguage, TRANSLATIONS } from '../data/translations';
 import { staggerContainer, microFadeUp, microFadeUpSubtle } from '../utils/motion';
 import { DossierVisualCard } from './DossierVisualCard';
@@ -77,6 +84,19 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
   const [savedPreviewUrl, setSavedPreviewUrl] = useState('');
   const dossierCardRef = useRef<HTMLDivElement>(null);
 
+  const occasionImg =
+    dossier.occasion === 'bridal'
+      ? CAMPAIGN_ASSETS.bridal
+      : dossier.occasion === 'evening'
+        ? CAMPAIGN_ASSETS.evening
+        : dossier.occasion === 'special_occasion'
+          ? CAMPAIGN_ASSETS.specialOccasion
+          : CAMPAIGN_ASSETS.customDress;
+
+  const occasionTitle =
+    getOccasions(lang).find((o) => o.id === dossier.occasion)?.title ||
+    (dossier.occasion ? dossier.occasion.replace(/_/g, ' ') : '');
+
   // Submit dossier server-side → admin + Telegram + email
   const handleSendToAtelier = async () => {
     if (submitting || submissionSuccess) return;
@@ -142,14 +162,44 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
   };
 
   const handleSaveDossierImage = async () => {
-    if (savingImage || !dossierCardRef.current) return;
+    if (savingImage) return;
     setSavingImage(true);
     setSubmitError('');
     try {
-      const dataUrl = await captureDossierImage(
-        dossierCardRef.current,
-        `${dossierId || 'MARGO-dossier'}.png`
-      );
+      const emptyRu = new Set(['Не выбран', 'Не выбрана', 'Не указан', 'Не знаю']);
+      const emptyEn = new Set(['Not selected', 'Not specified', 'Not sure']);
+      const rows = [
+        { label: t.dossierFieldName, value: dossier.contact.fullName },
+        { label: 'WhatsApp', value: dossier.contact.whatsappPhone },
+        { label: 'Telegram', value: dossier.contact.telegramHandle },
+        { label: t.dossierFieldLocation, value: dossier.contact.atelierLocation },
+        { label: t.dossierFieldOccasion, value: occasionTitle },
+        { label: t.dossierFieldDate, value: dossier.date || dossier.timeline },
+        { label: t.dossierFieldBudget, value: dossier.budget },
+        { label: t.dossierFieldSilhouette, value: silhouetteLabel },
+        { label: t.dossierFieldStyle, value: styleLabel },
+        { label: t.dossierFieldColours, value: colourLabel },
+        { label: t.dossierFieldFit, value: fitLabel },
+        { label: t.dossierFieldSize, value: sizeLabel },
+        { label: t.dossierFieldHeight, value: dossier.measurements.height },
+      ].filter((row) => {
+        const v = String(row.value || '').trim();
+        return v && !emptyRu.has(v) && !emptyEn.has(v);
+      });
+
+      const dataUrl = await captureDossierImage({
+        filename: `${dossierId || 'MARGO-dossier'}.png`,
+        dossierId,
+        title: t.dossierVisualTitle,
+        clientName: dossier.contact.fullName || t.dossierVisualClient,
+        heroSrc: occasionImg,
+        rows,
+        colourSwatches: colourItems.map((c) => ({ name: c.name, hex: c.hex })),
+        priorities: Array.isArray(dossier.priorities) ? dossier.priorities.filter(Boolean) : [],
+        notes: dossier.referenceNotes || '',
+        photoSrcs: Array.isArray(dossier.references) ? dossier.references.slice(0, 4) : [],
+        footer: 'MARGO Bridal & Special Occasion',
+      });
       setSavedPreviewUrl(dataUrl);
     } catch (err) {
       console.error('Dossier image error:', err);
@@ -162,16 +212,6 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
       setSavingImage(false);
     }
   };
-
-  // Find occasion image
-  const occasionImg =
-    dossier.occasion === 'bridal'
-      ? CAMPAIGN_ASSETS.bridal
-      : dossier.occasion === 'evening'
-      ? CAMPAIGN_ASSETS.evening
-      : dossier.occasion === 'special_occasion'
-      ? CAMPAIGN_ASSETS.specialOccasion
-      : CAMPAIGN_ASSETS.customDress;
 
   return (
     <motion.div

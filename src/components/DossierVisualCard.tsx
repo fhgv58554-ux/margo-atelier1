@@ -79,9 +79,8 @@ export const DossierVisualCard = forwardRef<HTMLDivElement, DossierVisualCardPro
             src={occasionImg}
             alt=""
             className="absolute inset-0 w-full h-full object-contain object-center"
-            crossOrigin="anonymous"
           />
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#1A1816]/75 to-transparent px-4 py-3">
+          <div className="absolute inset-0 top-auto h-16 bg-[#1A1816]/65 px-4 py-3 flex flex-col justify-end">
             <p className="text-[10px] uppercase tracking-[0.22em] text-[#E8DFD4]">MARGO Atelier</p>
             <p className="font-serif text-xl sm:text-2xl text-[#FAF8F5] tracking-wide">{dossierId}</p>
           </div>
@@ -169,7 +168,6 @@ export const DossierVisualCard = forwardRef<HTMLDivElement, DossierVisualCardPro
                       src={src}
                       alt=""
                       className="w-full h-full object-contain object-center"
-                      crossOrigin="anonymous"
                     />
                   </div>
                 ))}
