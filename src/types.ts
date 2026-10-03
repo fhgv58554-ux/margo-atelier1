@@ -106,6 +106,9 @@ export interface ConsultationDossier {
 
 export type StepKey =
   | 'welcome'
+  | 'explore_intro'
+  | 'book_consultation'
+  | 'virtual_tryon'
   | 'occasion'
   | 'date'
   | 'budget'

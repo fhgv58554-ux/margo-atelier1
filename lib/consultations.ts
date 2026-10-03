@@ -104,7 +104,7 @@ function clip(value: unknown, max: number): string {
 
 const ALLOWED_REF_MIME = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']);
 const MAX_REF_BYTES = 8 * 1024 * 1024;
-const MAX_REF_COUNT = 3;
+const MAX_REF_COUNT = 8;
 
 /** Accept only safe image data-URLs (or short https URLs for gallery assets). */
 export function sanitizeReferences(input: unknown): string[] {
@@ -124,7 +124,7 @@ export function sanitizeReferences(input: unknown): string[] {
       const approxBytes = Math.floor((b64.length * 3) / 4);
       if (approxBytes <= 0 || approxBytes > MAX_REF_BYTES) continue;
       out.push(`data:${mime};base64,${b64}`);
-    } else if (/^https:\/\//i.test(value) && value.length < 2048) {
+    } else if (/^https?:\/\//i.test(value) && value.length < 2048) {
       // Allow remote https image URLs only (no javascript: / data exe payloads)
       out.push(value);
     }
@@ -419,7 +419,7 @@ export async function sendTelegramNotification(consultation: Consultation): Prom
       return false;
     }
 
-    const refs = Array.isArray(consultation.references) ? consultation.references.slice(0, 3) : [];
+    const refs = Array.isArray(consultation.references) ? consultation.references.slice(0, MAX_REF_COUNT) : [];
     for (let i = 0; i < refs.length; i++) {
       await sendTelegramPhoto(
         token,
@@ -434,6 +434,50 @@ export async function sendTelegramNotification(consultation: Consultation): Prom
   } catch (error: any) {
     console.error('[Telegram] Dispatch error:', error?.message || 'Network failure');
     return false;
+  }
+}
+
+async function uploadWhatsAppMedia(
+  token: string,
+  phoneNumberId: string,
+  source: string,
+  index: number
+): Promise<string | null> {
+  try {
+    const form = new FormData();
+    form.append('messaging_product', 'whatsapp');
+    if (source.startsWith('data:')) {
+      const match = source.match(/^data:([^;]+);base64,(.+)$/);
+      if (!match) return null;
+      const mime = match[1] || 'image/jpeg';
+      const bytes = Buffer.from(match[2], 'base64');
+      const ext = mime.includes('png') ? 'png' : mime.includes('webp') ? 'webp' : 'jpg';
+      form.append('type', mime);
+      form.append('file', new Blob([bytes], { type: mime }), `photo-${index + 1}.${ext}`);
+    } else if (/^https?:\/\//i.test(source)) {
+      const imgRes = await fetch(source);
+      if (!imgRes.ok) return null;
+      const blob = await imgRes.blob();
+      form.append('type', blob.type || 'image/jpeg');
+      form.append('file', blob, `photo-${index + 1}.jpg`);
+    } else {
+      return null;
+    }
+
+    const uploadRes = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/media`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+    });
+    const uploadData: any = await uploadRes.json().catch(() => ({}));
+    if (!uploadRes.ok || !uploadData?.id) {
+      console.error('[WhatsApp] Media upload failed:', uploadData?.error?.message || uploadRes.status);
+      return null;
+    }
+    return String(uploadData.id);
+  } catch (err: any) {
+    console.error('[WhatsApp] Media upload error:', err?.message || err);
+    return null;
   }
 }
 
@@ -489,6 +533,32 @@ export async function sendWhatsAppNotification(consultation: Consultation): Prom
       return false;
     }
 
+    const refs = Array.isArray(consultation.references) ? consultation.references.slice(0, MAX_REF_COUNT) : [];
+    for (let i = 0; i < refs.length; i++) {
+      const mediaId = await uploadWhatsAppMedia(token, phoneNumberId, refs[i], i);
+      if (!mediaId) continue;
+      const imgRes = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          to: notifyTo,
+          type: 'image',
+          image: {
+            id: mediaId,
+            caption: `Фото ${i + 1}/${refs.length} · ${consultation.id}`,
+          },
+        }),
+      });
+      if (!imgRes.ok) {
+        const imgData: any = await imgRes.json().catch(() => ({}));
+        console.error('[WhatsApp] Image send failed:', imgData?.error?.message || imgRes.status);
+      }
+    }
+
     console.info(`[WhatsApp] Successfully delivered notification for dossier ${consultation.id}`);
     return true;
   } catch (error: any) {
@@ -520,34 +590,23 @@ export async function submitConsultation(body: any) {
     `[MARGO Atelier Engine] New Consultation Dossier received (${saved.id}) persisted=${persisted} supabase=${isSupabaseConfigured()}`
   );
 
-  const channel = saved.preferredChannel;
   let telegramNotificationSent = false;
   let whatsappNotificationSent = false;
   let emailNotificationSent = false;
 
-  // Deliver to the channel the client chose; always keep email as atelier backup.
-  if (channel === 'whatsapp') {
-    try {
-      whatsappNotificationSent = await sendWhatsAppNotification(saved);
-    } catch (waErr: any) {
-      console.error('[WhatsApp] Unexpected notification error:', waErr?.message || 'Error');
-      whatsappNotificationSent = false;
-    }
-    // Fallback: if WhatsApp Cloud API is not wired yet, still ping Telegram so the lead is not lost.
-    if (!whatsappNotificationSent) {
-      try {
-        telegramNotificationSent = await sendTelegramNotification(saved);
-      } catch (tgErr: any) {
-        console.error('[Telegram] Fallback notification error:', tgErr?.message || 'Error');
-      }
-    }
-  } else {
-    try {
-      telegramNotificationSent = await sendTelegramNotification(saved);
-    } catch (tgErr: any) {
-      console.error('[Telegram] Unexpected notification error:', tgErr?.message || 'Error');
-      telegramNotificationSent = false;
-    }
+  // Always deliver to atelier: Telegram bot + admin email (+ WhatsApp when configured).
+  try {
+    telegramNotificationSent = await sendTelegramNotification(saved);
+  } catch (tgErr: any) {
+    console.error('[Telegram] Unexpected notification error:', tgErr?.message || 'Error');
+    telegramNotificationSent = false;
+  }
+
+  try {
+    whatsappNotificationSent = await sendWhatsAppNotification(saved);
+  } catch (waErr: any) {
+    console.error('[WhatsApp] Unexpected notification error:', waErr?.message || 'Error');
+    whatsappNotificationSent = false;
   }
 
   try {

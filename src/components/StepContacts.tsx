@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Send, Phone, MapPin, Globe, User } from 'lucide-react';
+import { Send, Phone, MapPin, User } from 'lucide-react';
 import { ClientContact } from '../types';
 import { getAtelierLocations } from '../data/atelierContent';
 import { SupportedLanguage, TRANSLATIONS } from '../data/translations';
@@ -189,32 +189,6 @@ export const StepContacts: React.FC<StepContactsProps> = ({
           </select>
         </div>
 
-        {/* Preferred Language */}
-        <div className="p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#E8E1D6]">
-          <label htmlFor="contact-language" className="block text-[11px] font-medium uppercase tracking-[0.18em] text-[#61564C] mb-2 flex items-center gap-1.5">
-            <Globe className="w-3.5 h-3.5 text-[#8C7D70]" />
-            {t.step10LangLabel}
-          </label>
-          <div className="grid grid-cols-4 gap-2">
-            {['Русский', 'English', 'Italiano', 'Français'].map((l) => {
-              const isSelected = contact.preferredLanguage === l;
-              return (
-                <button
-                  key={l}
-                  type="button"
-                  onClick={() => handleChange('preferredLanguage', l)}
-                  className={`py-2 px-1 rounded-xl text-xs text-center transition-all border cursor-pointer ${
-                    isSelected
-                      ? 'bg-[#1A1816] text-[#FAF8F5] border-[#1A1816] font-medium'
-                      : 'bg-[#F6F1EA] text-[#61564C] border-[#E2DAD0] hover:border-[#CEC2B4]'
-                  }`}
-                >
-                  {l}
-                </button>
-              );
-            })}
-          </div>
-        </div>
       </motion.div>
 
       {/* Navigation Footer */}

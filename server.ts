@@ -18,6 +18,14 @@ import {
 } from './lib/admin-auth';
 import { clientIpFromHeaders, consumeRateLimit } from './lib/rate-limit';
 import type { Consultation } from './lib/types';
+import {
+  capturePayPalOrder,
+  createPayPalOrder,
+  getPayPalClientId,
+  isPayPalConfigured,
+  parseTryOnPackage,
+  TRYON_PACKAGES,
+} from './lib/paypal';
 
 const runningFromDist = /dist[/\\]server\.cjs$/.test(process.argv[1] || '');
 const isProduction =
@@ -92,6 +100,81 @@ function handleAdminLogin(req: express.Request, res: express.Response) {
 
 app.post('/api/admin/login', handleAdminLogin);
 app.post('/api/login', handleAdminLogin);
+
+app.get('/api/paypal/config', (_req, res) => {
+  const configured = isPayPalConfigured();
+  return res.json({
+    configured,
+    clientId: configured ? getPayPalClientId() : null,
+    currency: 'ZAR',
+    mode: String(process.env.PAYPAL_MODE || 'sandbox').toLowerCase() === 'live' ? 'live' : 'sandbox',
+  });
+});
+
+app.post('/api/paypal/create-order', async (req, res) => {
+  const ip = clientIpFromHeaders(
+    req.headers as Record<string, string | string[] | undefined>,
+    req.ip || 'unknown'
+  );
+  const limit = consumeRateLimit(`paypal-create:${ip}`, 30, 60 * 60 * 1000);
+  if (!limit.allowed) {
+    res.setHeader('Retry-After', String(limit.retryAfterSec));
+    return res.status(429).json({ error: 'Too many payment attempts. Try again later.' });
+  }
+  try {
+    const pkg = parseTryOnPackage(req.body?.package);
+    if (!pkg) {
+      return res.status(400).json({ error: 'Invalid package' });
+    }
+    const order = await createPayPalOrder(pkg);
+    const pack = TRYON_PACKAGES[pkg];
+    return res.json({
+      id: order.id,
+      package: pkg,
+      amount: pack.amount,
+      currency: pack.currency,
+    });
+  } catch (error: any) {
+    const status = Number(error?.statusCode) || 500;
+    return res.status(status).json({ error: error?.message || 'Failed to create PayPal order' });
+  }
+});
+
+app.post('/api/paypal/capture-order', async (req, res) => {
+  const ip = clientIpFromHeaders(
+    req.headers as Record<string, string | string[] | undefined>,
+    req.ip || 'unknown'
+  );
+  const limit = consumeRateLimit(`paypal-capture:${ip}`, 30, 60 * 60 * 1000);
+  if (!limit.allowed) {
+    res.setHeader('Retry-After', String(limit.retryAfterSec));
+    return res.status(429).json({ error: 'Too many payment attempts. Try again later.' });
+  }
+  try {
+    const orderId = String(req.body?.orderId || '').trim();
+    if (!orderId) {
+      return res.status(400).json({ error: 'orderId is required' });
+    }
+    const captured = await capturePayPalOrder(orderId);
+    if (captured.status !== 'COMPLETED') {
+      return res.status(400).json({
+        error: 'Payment was not completed',
+        status: captured.status,
+        id: captured.id,
+      });
+    }
+    return res.json({
+      id: captured.id,
+      status: captured.status,
+      package: captured.packageKey,
+      amount: captured.amount,
+      currency: captured.currency,
+    });
+  } catch (error: any) {
+    const status = Number(error?.statusCode) || 500;
+    return res.status(status).json({ error: error?.message || 'Failed to capture PayPal order' });
+  }
+});
 
 app.post('/api/gemini/style-direction', async (req, res) => {
   try {

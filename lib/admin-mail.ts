@@ -12,7 +12,7 @@ function smtpConfig() {
 }
 
 function photoAttachments(consultation: Consultation) {
-  const refs = Array.isArray(consultation.references) ? consultation.references.slice(0, 3) : [];
+  const refs = Array.isArray(consultation.references) ? consultation.references.slice(0, 8) : [];
   return refs.flatMap((source, index) => {
     const match = source.match(/^data:([^;]+);base64,(.+)$/);
     if (!match) return [];

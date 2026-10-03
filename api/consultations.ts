@@ -7,7 +7,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const SESSION_PURPOSE = 'margo-admin-session-v3';
 const MAX_AGE_SEC = 90 * 24 * 60 * 60;
-const MAX_REF_COUNT = 3;
+const MAX_REF_COUNT = 8;
 const MAX_REF_BYTES = 8 * 1024 * 1024;
 const ALLOWED_REF_MIME = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']);
 
@@ -116,7 +116,7 @@ function sanitizeReferences(input: unknown): string[] {
       const approxBytes = Math.floor((b64.length * 3) / 4);
       if (approxBytes <= 0 || approxBytes > MAX_REF_BYTES) continue;
       out.push(`data:${mime};base64,${b64}`);
-    } else if (/^https:\/\//i.test(value) && value.length < 2048) {
+    } else if (/^https?:\/\//i.test(value) && value.length < 2048) {
       out.push(value);
     }
 
@@ -365,6 +365,62 @@ AI STYLE DIRECTION:
 ${aiSummary}`;
 }
 
+async function sendAdminDossierEmail(
+  consultation: ReturnType<typeof createConsultationFromBody>
+): Promise<boolean> {
+  const host = process.env.SMTP_HOST?.trim();
+  const user = process.env.SMTP_USER?.trim();
+  const pass = process.env.SMTP_PASS?.trim();
+  const port = Number(process.env.SMTP_PORT || 587);
+  const to = process.env.ADMIN_EMAIL?.trim();
+  const from = process.env.SMTP_FROM?.trim() || user;
+  if (!host || !user || !pass || !to || !from) {
+    console.info('[Email] ADMIN_EMAIL or SMTP settings are missing. Skipping.');
+    return false;
+  }
+
+  try {
+    const nodemailerMod = await import('nodemailer');
+    const nodemailer = (nodemailerMod as any).default ?? nodemailerMod;
+    const transport = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass },
+    });
+
+    const refs = Array.isArray(consultation.references)
+      ? consultation.references.slice(0, MAX_REF_COUNT)
+      : [];
+    const attachments = refs.flatMap((source: string, index: number) => {
+      const match = source.match(/^data:([^;]+);base64,(.+)$/);
+      if (!match) return [];
+      const mime = match[1] || 'image/jpeg';
+      const ext = mime.includes('png') ? 'png' : mime.includes('webp') ? 'webp' : 'jpg';
+      return [
+        {
+          filename: `reference-${index + 1}.${ext}`,
+          content: Buffer.from(match[2], 'base64'),
+          contentType: mime,
+        },
+      ];
+    });
+
+    await transport.sendMail({
+      from,
+      to,
+      subject: `Досье ${consultation.id || ''} · MARGO Atelier`.trim(),
+      text: formatConsultationMessage(consultation),
+      attachments,
+    });
+    console.info(`[Email] Dossier ${consultation.id} sent to ${to}`);
+    return true;
+  } catch (error: any) {
+    console.error('[Email] Failed to send dossier:', error?.message || error);
+    return false;
+  }
+}
+
 async function sendTelegramNotification(
   consultation: ReturnType<typeof createConsultationFromBody>
 ): Promise<boolean> {
@@ -396,7 +452,7 @@ async function sendTelegramNotification(
       return false;
     }
 
-    const refs = Array.isArray(consultation.references) ? consultation.references.slice(0, 3) : [];
+    const refs = Array.isArray(consultation.references) ? consultation.references.slice(0, MAX_REF_COUNT) : [];
     for (let i = 0; i < refs.length; i++) {
       const source = refs[i];
       if (!source.startsWith('data:') && !/^https?:\/\//i.test(source)) continue;
@@ -435,6 +491,51 @@ async function sendTelegramNotification(
   }
 }
 
+async function uploadWhatsAppMedia(
+  token: string,
+  phoneNumberId: string,
+  source: string,
+  index: number
+): Promise<string | null> {
+  try {
+    const form = new FormData();
+    form.append('messaging_product', 'whatsapp');
+    if (source.startsWith('data:')) {
+      const match = source.match(/^data:([^;]+);base64,(.+)$/);
+      if (!match) return null;
+      const mime = match[1] || 'image/jpeg';
+      const bytes = Buffer.from(match[2], 'base64');
+      const ext = mime.includes('png') ? 'png' : mime.includes('webp') ? 'webp' : 'jpg';
+      form.append('type', mime);
+      form.append('file', new Blob([bytes], { type: mime }), `photo-${index + 1}.${ext}`);
+    } else if (/^https:\/\//i.test(source)) {
+      const imgRes = await fetch(source);
+      if (!imgRes.ok) return null;
+      const blob = await imgRes.blob();
+      const mime = blob.type || 'image/jpeg';
+      form.append('type', mime);
+      form.append('file', blob, `photo-${index + 1}.jpg`);
+    } else {
+      return null;
+    }
+
+    const uploadRes = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/media`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+    });
+    const uploadData: any = await uploadRes.json().catch(() => ({}));
+    if (!uploadRes.ok || !uploadData?.id) {
+      console.error('[WhatsApp] Media upload failed:', uploadData?.error?.message || uploadRes.status);
+      return null;
+    }
+    return String(uploadData.id);
+  } catch (err: any) {
+    console.error('[WhatsApp] Media upload error:', err?.message || err);
+    return null;
+  }
+}
+
 async function sendWhatsAppNotification(
   consultation: ReturnType<typeof createConsultationFromBody>
 ): Promise<boolean> {
@@ -468,6 +569,33 @@ async function sendWhatsAppNotification(
       console.error('[WhatsApp] Failed:', (data as any)?.error?.message || response.status);
       return false;
     }
+
+    const refs = Array.isArray(consultation.references) ? consultation.references.slice(0, MAX_REF_COUNT) : [];
+    for (let i = 0; i < refs.length; i++) {
+      const mediaId = await uploadWhatsAppMedia(token, phoneNumberId, refs[i], i);
+      if (!mediaId) continue;
+      const imgRes = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          to: notifyTo,
+          type: 'image',
+          image: {
+            id: mediaId,
+            caption: `Фото ${i + 1}/${refs.length} · ${consultation.id}`,
+          },
+        }),
+      });
+      if (!imgRes.ok) {
+        const imgData = await imgRes.json().catch(() => ({}));
+        console.error('[WhatsApp] Image send failed:', (imgData as any)?.error?.message || imgRes.status);
+      }
+    }
+
     return true;
   } catch (error: any) {
     console.error('[WhatsApp] Dispatch error:', error?.message || 'Network failure');
@@ -563,14 +691,25 @@ async function submitConsultation(body: any) {
 
   let telegramNotificationSent = false;
   let whatsappNotificationSent = false;
+  let emailNotificationSent = false;
 
-  if (saved.preferredChannel === 'whatsapp') {
-    whatsappNotificationSent = await sendWhatsAppNotification(saved as any);
-    if (!whatsappNotificationSent) {
-      telegramNotificationSent = await sendTelegramNotification(saved as any);
-    }
-  } else {
+  // Always deliver to atelier: Telegram bot + admin email (+ WhatsApp when configured).
+  try {
     telegramNotificationSent = await sendTelegramNotification(saved as any);
+  } catch (tgErr: any) {
+    console.error('[Telegram] Unexpected notification error:', tgErr?.message || 'Error');
+  }
+
+  try {
+    whatsappNotificationSent = await sendWhatsAppNotification(saved as any);
+  } catch (waErr: any) {
+    console.error('[WhatsApp] Unexpected notification error:', waErr?.message || 'Error');
+  }
+
+  try {
+    emailNotificationSent = await sendAdminDossierEmail(saved as any);
+  } catch (mailErr: any) {
+    console.error('[Email] Unexpected notification error:', mailErr?.message || 'Error');
   }
 
   return {
@@ -578,20 +717,20 @@ async function submitConsultation(body: any) {
     consultation: saved,
     telegramNotificationSent,
     whatsappNotificationSent,
-    emailNotificationSent: false,
+    emailNotificationSent,
     persisted,
   };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    if (req.method === 'GET') {
+  if (req.method === 'GET') {
       const ok = await verifyAdminToken(bearer(req));
       if (!ok) return res.status(401).json({ error: 'Unauthorized' });
 
       const sb = supabaseConfig();
       if (!sb) {
-        return res.status(503).json({
+      return res.status(503).json({
           error:
             'Supabase is not configured on Vercel. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY, run the SQL migration, then redeploy.',
         });
@@ -615,15 +754,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       const list = Array.isArray(payload) ? payload.map(rowToConsultation) : [];
       return res.status(200).json({ consultations: list, total: list.length });
-    }
+  }
 
-    if (req.method === 'POST') {
+  if (req.method === 'POST') {
       const result = await submitConsultation(req.body || {});
       return res.status(200).json(result);
-    }
+  }
 
-    res.setHeader('Allow', 'GET, POST');
-    return res.status(405).json({ error: 'Method not allowed' });
+  res.setHeader('Allow', 'GET, POST');
+  return res.status(405).json({ error: 'Method not allowed' });
   } catch (error: any) {
     const status = Number(error?.statusCode) || 500;
     console.error('[api/consultations]', error?.message || error);

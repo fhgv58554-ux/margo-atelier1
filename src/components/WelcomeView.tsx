@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, ArrowRight, Clock, ShieldCheck, Compass, X } from 'lucide-react';
+import { Sparkles, ArrowRight, Clock, ShieldCheck, Compass, X, MessageCircle } from 'lucide-react';
 import { SupportedLanguage, TRANSLATIONS } from '../data/translations';
 import { staggerContainer, microFadeUp, microFadeUpSubtle } from '../utils/motion';
 import welcomeHeroImg from '../assets/images/margo_welcome_hero.jpg';
@@ -16,10 +16,17 @@ export interface ConsentPayload {
 
 interface WelcomeViewProps {
   onStart: (consent: ConsentPayload) => void;
+  onBookConsultation: () => void;
+  onVirtualTryOn: () => void;
   lang: SupportedLanguage;
 }
 
-export const WelcomeView: React.FC<WelcomeViewProps> = ({ onStart, lang }) => {
+export const WelcomeView: React.FC<WelcomeViewProps> = ({
+  onStart,
+  onBookConsultation,
+  onVirtualTryOn,
+  lang,
+}) => {
   const t = TRANSLATIONS[lang];
   const [showConsent, setShowConsent] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -36,8 +43,15 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onStart, lang }) => {
 
   const canAccept = acceptTerms && acceptPrivacy;
 
+  const openExploreConsent = () => {
+    setAcceptTerms(false);
+    setAcceptPrivacy(false);
+    setShowConsent(true);
+  };
+
   const handleAccept = () => {
     if (!canAccept) return;
+    setShowConsent(false);
     onStart({
       consentAccepted: true,
       consentAcceptedAt: new Date().toISOString(),
@@ -51,12 +65,12 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onStart, lang }) => {
         variants={staggerContainer(0.04, 0.02)}
         initial="initial"
         animate="animate"
-        className="w-full max-w-xl mx-auto px-3 sm:px-4 py-1 sm:py-10 flex flex-col items-center text-center h-full min-h-0 sm:h-auto sm:min-h-0 overflow-y-auto sm:overflow-visible justify-between gap-1 sm:gap-0"
+        className="w-full max-w-xl mx-auto px-3 sm:px-4 pt-0 pb-1 sm:pt-2 sm:pb-8 flex flex-col items-center text-center h-full min-h-0 sm:h-auto sm:min-h-0 overflow-y-auto sm:overflow-visible justify-start gap-1.5 sm:gap-4"
       >
         <div className="w-full flex flex-col items-center shrink-0">
           <motion.div
             variants={microFadeUpSubtle}
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#FAF5EE] border border-[#E5DDD2] text-[8px] sm:text-[11px] tracking-[0.2em] text-[#6B5E53] uppercase mb-1 sm:mb-6 font-medium"
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#FAF5EE] border border-[#E5DDD2] text-[8px] sm:text-[11px] tracking-[0.2em] text-[#6B5E53] uppercase mb-0.5 sm:mb-3 font-medium"
           >
             <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#A89684]" />
             {t.badge}
@@ -64,14 +78,14 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onStart, lang }) => {
 
           <motion.h1
             variants={microFadeUp}
-            className="font-serif text-[1.15rem] sm:text-5xl font-light text-[#1A1816] tracking-tight leading-[1.15] mb-1 sm:mb-4"
+            className="font-serif text-[1.15rem] sm:text-5xl font-light text-[#1A1816] tracking-tight leading-[1.15] mb-0.5 sm:mb-2"
           >
             {t.appTitle}
           </motion.h1>
 
           <motion.div
             variants={microFadeUp}
-            className="text-[9px] sm:text-base text-[#61574D] font-light leading-[1.25] sm:leading-relaxed max-w-md mb-0 sm:mb-8 space-y-0.5 sm:space-y-3"
+            className="text-[9px] sm:text-base text-[#61574D] font-light leading-[1.25] sm:leading-relaxed max-w-md mb-0 sm:mb-2 space-y-0.5 sm:space-y-2"
           >
             {t.appIntro.map((paragraph, idx) => (
               <p key={idx}>{paragraph}</p>
@@ -79,7 +93,7 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onStart, lang }) => {
           </motion.div>
         </div>
 
-        <motion.div variants={microFadeUp} className="mx-auto my-1 sm:my-8 w-full max-w-md shrink-0">
+        <motion.div variants={microFadeUp} className="mx-auto my-0 sm:my-2 w-full max-w-md shrink-0">
           <img
             src={welcomeHeroImg}
             alt="MARGO Bridal & Special Occasion"
@@ -90,7 +104,7 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onStart, lang }) => {
         <div className="w-full flex flex-col items-center shrink-0">
           <motion.div
             variants={microFadeUp}
-            className="grid grid-cols-3 gap-1 sm:gap-3 w-full max-w-md mb-1.5 sm:mb-8 text-left"
+            className="grid grid-cols-3 gap-1 sm:gap-3 w-full max-w-md mb-1.5 sm:mb-4 text-left"
           >
             <div className="p-1 sm:p-3 rounded-md sm:rounded-xl bg-[#F6F1EA] border border-[#E9E2D8]">
               <Clock className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-[#8C7D70] mb-0.5 sm:mb-1.5" />
@@ -117,29 +131,73 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onStart, lang }) => {
             </div>
           </motion.div>
 
-          <motion.button
+          <motion.div
             variants={microFadeUp}
-            whileHover={{ scale: 1.015 }}
-            whileTap={{ scale: 0.985 }}
-            id="start-consultation-btn"
-            type="button"
-            onClick={() => {
-              setAcceptTerms(false);
-              setAcceptPrivacy(false);
-              setShowConsent(true);
-            }}
-            className="w-full max-w-md py-2.5 sm:py-4 px-6 rounded-full bg-[#1A1816] text-[#FAF8F5] hover:bg-[#2C2723] transition-all duration-200 flex items-center justify-center gap-2 sm:gap-3 text-[9px] sm:text-sm font-medium tracking-[0.18em] uppercase shadow-lg shadow-black/10 cursor-pointer"
+            className="w-full max-w-md flex flex-col gap-2 sm:gap-3"
           >
-            <span>{t.startBtn}</span>
-            <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D8CEBF]" />
-          </motion.button>
+            <div className="flex flex-col gap-1">
+              <button
+                id="book-consultation-btn"
+                type="button"
+                onClick={onBookConsultation}
+                className="w-full py-2.5 sm:py-3.5 px-5 rounded-full bg-[#1A1816] text-[#FAF8F5] hover:bg-[#2C2723] transition-all duration-200 flex items-center justify-center gap-2 text-[9px] sm:text-xs font-medium tracking-[0.14em] uppercase shadow-lg shadow-black/10 cursor-pointer"
+              >
+                <span>{t.bookConsultationBtn}</span>
+                <ArrowRight className="w-3.5 h-3.5 text-[#D8CEBF]" />
+              </button>
+              <p className="text-[8px] sm:text-[11px] text-[#7A6E63] font-light leading-snug px-1">
+                {t.bookConsultationHint}
+              </p>
+            </div>
+            <div className="flex flex-col gap-1">
+              <button
+                id="start-consultation-btn"
+                type="button"
+                onClick={openExploreConsent}
+                className="w-full py-2.5 sm:py-3.5 px-5 rounded-full border border-[#1A1816] bg-transparent text-[#1A1816] hover:bg-[#1A1816] hover:text-[#FAF8F5] transition-all duration-200 flex items-center justify-center gap-2 text-[9px] sm:text-xs font-medium tracking-[0.14em] uppercase cursor-pointer"
+              >
+                <span>{t.startBtn}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+              <p className="text-[8px] sm:text-[11px] text-[#7A6E63] font-light leading-snug px-1">
+                {t.startBtnHint}
+              </p>
+            </div>
+            <div className="flex flex-col gap-1">
+              <button
+                id="virtual-tryon-btn"
+                type="button"
+                onClick={onVirtualTryOn}
+                className="w-full py-2.5 sm:py-3.5 px-5 rounded-full border border-[#C9BEB0] bg-[#F6F1EA] text-[#1A1816] hover:border-[#1A1816] transition-all duration-200 flex items-center justify-center gap-2 text-[9px] sm:text-xs font-medium tracking-[0.14em] uppercase cursor-pointer"
+              >
+                <span>{t.virtualTryOnBtn}</span>
+                <ArrowRight className="w-3.5 h-3.5 text-[#8C7D70]" />
+              </button>
+              <p className="text-[8px] sm:text-[11px] text-[#7A6E63] font-light leading-snug px-1">
+                {t.virtualTryOnHint}
+              </p>
+            </div>
+          </motion.div>
+
+          <motion.a
+            variants={microFadeUp}
+            href="https://wa.me/27763643600"
+            target="_blank"
+            rel="noopener noreferrer"
+            id="welcome-whatsapp-consult"
+            className="mt-2 sm:mt-3 inline-flex items-center justify-center gap-1.5 text-[10px] sm:text-xs tracking-[0.08em] text-[#1A1816] hover:text-[#128C7E] transition-colors"
+          >
+            <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#25D366]" />
+            <span className="uppercase font-medium">{t.headerWhatsappLabel}</span>
+            <span className="font-light tracking-normal normal-case">{t.headerWhatsappNumber}</span>
+          </motion.a>
 
           <motion.div
             variants={microFadeUpSubtle}
-            className="text-[7px] sm:text-[11px] tracking-wider text-[#988E84] mt-1 sm:mt-4 uppercase space-y-0 sm:space-y-1"
+            className="text-[7px] sm:text-[11px] tracking-wider text-[#988E84] mt-1 sm:mt-3 uppercase space-y-0 sm:space-y-1"
           >
             <div>{t.citiesFooter}</div>
-            <div>{t.citiesFooterSub}</div>
+            {t.citiesFooterSub ? <div>{t.citiesFooterSub}</div> : null}
           </motion.div>
         </div>
       </motion.div>

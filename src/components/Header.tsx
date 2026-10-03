@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Sparkles, LayoutDashboard, Smartphone } from 'lucide-react';
+import { ArrowLeft, Sparkles, LayoutDashboard, Smartphone, MessageCircle } from 'lucide-react';
 import { StepKey } from '../types';
 import { SupportedLanguage, TRANSLATIONS } from '../data/translations';
 
@@ -31,47 +31,46 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectLang,
 }) => {
   const t = TRANSLATIONS[lang];
-  const isWelcome = currentStep === 'welcome' && !isDashboard;
-  const showProgress = !isDashboard && currentStep !== 'welcome';
+  const showProgress =
+    !isDashboard &&
+    !['welcome', 'explore_intro', 'book_consultation', 'virtual_tryon', 'summary'].includes(
+      currentStep
+    );
 
   return (
-    <header
-      className={`sticky top-0 z-40 w-full bg-[#FAF8F5]/95 backdrop-blur-md border-b border-[#EBE5DE] px-3 sm:px-4 transition-all duration-300 ${
-        isWelcome ? 'py-1.5 sm:py-3' : 'py-1 sm:py-2.5'
-      }`}
-    >
+    <header className="sticky top-0 z-40 w-full bg-[#FAF8F5]/95 backdrop-blur-md border-b border-[#EBE5DE] px-2.5 sm:px-4 py-1.5 sm:py-2 transition-all duration-300">
       <div className="max-w-4xl mx-auto flex items-center justify-between gap-1.5 sm:gap-2">
         {/* Left: Back button or spacer */}
-        <div className="flex items-center gap-2 sm:gap-3 min-w-[32px] sm:min-w-[72px]">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-[28px] sm:min-w-[64px]">
           {canGoBack && !isDashboard ? (
             <button
               id="back-button"
               type="button"
               onClick={onBack}
               aria-label={lang === 'ru' ? 'Предыдущий шаг' : 'Previous step'}
-              className="w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-[#1A1816] hover:bg-[#EFE9E1] transition-colors border border-[#E5DFD6]"
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[#1A1816] hover:bg-[#EFE9E1] transition-colors border border-[#E5DFD6]"
             >
               <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           ) : (
-            <div className="w-7 h-7 sm:w-9 sm:h-9" aria-hidden="true" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8" aria-hidden="true" />
           )}
         </div>
 
         {/* Center: Brand Wordmark */}
         <div className="text-center cursor-pointer flex-1 px-0.5 min-w-0" onClick={() => !isDashboard && onBack()}>
-          <span className="font-serif text-[9px] sm:text-sm md:text-base font-light tracking-[0.06em] sm:tracking-[0.08em] text-[#1A1816] uppercase block leading-tight truncate sm:overflow-visible sm:whitespace-normal">
+          <span className="font-serif text-[10px] sm:text-sm font-light tracking-[0.05em] sm:tracking-[0.07em] text-[#1A1816] uppercase block leading-tight">
             {t.brandName}
           </span>
-          <span className="text-[5.5px] sm:text-[8px] tracking-[0.1em] sm:tracking-[0.14em] text-[#867C74] uppercase block font-sans mt-0.5 leading-tight truncate sm:overflow-visible sm:whitespace-normal">
+          <span className="text-[6px] sm:text-[8px] tracking-[0.1em] sm:tracking-[0.14em] text-[#867C74] uppercase block font-sans mt-0.5 leading-tight">
             {t.brandTagline}
           </span>
         </div>
 
         {/* Right: Language switch, Simulator & Dashboard */}
-        <div className="flex items-center gap-1 sm:gap-2 min-w-[32px] sm:min-w-[72px] justify-end shrink-0">
+        <div className="flex items-center gap-1 sm:gap-1.5 min-w-[28px] sm:min-w-[64px] justify-end shrink-0">
           {/* Language Toggle: RU | EN */}
-          <div className="flex items-center rounded-full bg-[#EFEAE2] border border-[#DDD5C9] p-0.5 text-[10px] sm:text-[11px] font-medium tracking-wide">
+          <div className="flex items-center rounded-full bg-[#EFEAE2] border border-[#DDD5C9] p-0.5 text-[9px] sm:text-[10px] font-medium tracking-wide">
             <button
               id="lang-ru-btn"
               type="button"
@@ -104,7 +103,7 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             onClick={onToggleSimulator}
             title={isMobileSimulator ? 'Switch to Full Screen view' : 'Preview in Telegram Device View'}
-            className="hidden sm:flex items-center justify-center w-8 h-8 rounded-full border border-[#E2DAD0] bg-[#FAF8F5] text-[#6B6157] hover:text-[#1A1816] hover:bg-[#EFE9E1] transition-colors text-xs"
+            className="hidden sm:flex items-center justify-center w-7 h-7 rounded-full border border-[#E2DAD0] bg-[#FAF8F5] text-[#6B6157] hover:text-[#1A1816] hover:bg-[#EFE9E1] transition-colors text-xs"
           >
             <Smartphone className="w-3.5 h-3.5" />
           </button>
@@ -115,16 +114,30 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             onClick={onToggleDashboard}
             aria-label={isDashboard ? t.clientAppBtn : t.atelierDeskBtn}
-            className={`flex items-center justify-center gap-1.5 w-7 h-7 sm:w-auto sm:h-auto sm:px-3 sm:py-1.5 rounded-full text-xs font-medium tracking-wide transition-all border ${
+            className={`flex items-center justify-center gap-1 w-7 h-7 sm:w-auto sm:h-auto sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-medium tracking-wide transition-all border ${
               isDashboard
                 ? 'bg-[#1A1816] text-[#FAF8F5] border-[#1A1816]'
                 : 'bg-[#FAF8F5] text-[#1A1816] border-[#D9D0C5] hover:bg-[#EFE9E1]'
             }`}
           >
-            <LayoutDashboard className="w-3.5 h-3.5" />
+            <LayoutDashboard className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             <span className="hidden sm:inline">{isDashboard ? t.clientAppBtn : t.atelierDeskBtn}</span>
           </button>
         </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto mt-0.5 sm:mt-1 flex justify-end">
+        <a
+          href="https://wa.me/27763643600"
+          target="_blank"
+          rel="noopener noreferrer"
+          id="header-whatsapp-consult"
+          className="inline-flex items-center gap-1 text-[8px] sm:text-[10px] tracking-[0.05em] text-[#1A1816] hover:text-[#128C7E] transition-colors"
+        >
+          <MessageCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#25D366] shrink-0" />
+          <span className="uppercase font-medium">{t.headerWhatsappLabel}</span>
+          <span className="font-light tracking-normal normal-case">{t.headerWhatsappNumber}</span>
+        </a>
       </div>
 
       {/* Subtle Progress Line for Client questionnaire */}

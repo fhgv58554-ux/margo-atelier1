@@ -15,6 +15,9 @@ import {
 import { SupportedLanguage, TRANSLATIONS } from './data/translations';
 import { Header } from './components/Header';
 import { WelcomeView } from './components/WelcomeView';
+import { ExploreIntroView } from './components/ExploreIntroView';
+import { BookConsultationView } from './components/BookConsultationView';
+import { VirtualTryOnView } from './components/VirtualTryOnView';
 import { StepOccasion } from './components/StepOccasion';
 import { StepDate } from './components/StepDate';
 import { StepBudget } from './components/StepBudget';
@@ -31,6 +34,7 @@ import { stepTransitionVariants } from './utils/motion';
 
 const STEP_ORDER: StepKey[] = [
   'welcome',
+  'explore_intro',
   'occasion',
   'date',
   'budget',
@@ -43,6 +47,8 @@ const STEP_ORDER: StepKey[] = [
   'contacts',
   'summary',
 ];
+
+const SIDE_FLOWS: StepKey[] = ['book_consultation', 'virtual_tryon'];
 
 const INITIAL_DOSSIER: ConsultationDossier = {
   occasion: '',
@@ -195,9 +201,12 @@ export default function App() {
   }, [lang]);
 
   const t = TRANSLATIONS[lang];
+  const isSideFlow = SIDE_FLOWS.includes(currentStep);
   const currentIndex = STEP_ORDER.indexOf(currentStep);
   const totalSteps = 10; // questionnaire steps (occasion to contacts)
-  const currentStepNumber = Math.max(1, Math.min(10, currentIndex));
+  // Progress starts at occasion (= index 2 in STEP_ORDER)
+  const currentStepNumber =
+    currentIndex >= 2 ? Math.max(1, Math.min(10, currentIndex - 1)) : 0;
 
   const goToNextStep = () => {
     const nextIdx = currentIndex + 1;
@@ -208,6 +217,11 @@ export default function App() {
   };
 
   const goToPreviousStep = () => {
+    if (isSideFlow) {
+      setCurrentStep('welcome');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     if (currentIndex > 0) {
       setCurrentStep(STEP_ORDER[currentIndex - 1]);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -254,7 +268,7 @@ export default function App() {
         stepIndex={currentStepNumber}
         totalSteps={totalSteps}
         onBack={goToPreviousStep}
-        canGoBack={currentIndex > 0}
+        canGoBack={isSideFlow || currentIndex > 0}
         isDashboard={isDashboard}
         onToggleDashboard={() => setIsDashboard(!isDashboard)}
         isMobileSimulator={isMobileSimulator}
@@ -316,9 +330,30 @@ export default function App() {
                   <WelcomeView
                     onStart={(consent) => {
                       setDossier((prev) => ({ ...prev, ...consent }));
-                      setCurrentStep('occasion');
+                      setCurrentStep('explore_intro');
                     }}
+                    onBookConsultation={() => setCurrentStep('book_consultation')}
+                    onVirtualTryOn={() => setCurrentStep('virtual_tryon')}
                     lang={lang}
+                  />
+                )}
+
+                {currentStep === 'explore_intro' && (
+                  <ExploreIntroView onNext={goToNextStep} lang={lang} />
+                )}
+
+                {currentStep === 'book_consultation' && (
+                  <BookConsultationView
+                    lang={lang}
+                    onBackHome={() => setCurrentStep('welcome')}
+                    onVirtualTryOn={() => setCurrentStep('virtual_tryon')}
+                  />
+                )}
+
+                {currentStep === 'virtual_tryon' && (
+                  <VirtualTryOnView
+                    lang={lang}
+                    onBackHome={() => setCurrentStep('welcome')}
                   />
                 )}
 
@@ -446,6 +481,7 @@ export default function App() {
                     dossier={dossier}
                     onEditStep={(step) => setCurrentStep(step)}
                     onReset={handleReset}
+                    onVirtualTryOn={() => setCurrentStep('virtual_tryon')}
                     lang={lang}
                   />
                 )}
@@ -461,16 +497,8 @@ export default function App() {
           hideSiteFooter ? 'hidden' : ''
         }`}
       >
-        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="max-w-4xl mx-auto flex items-center justify-center">
           <span>{t.footerSlogan}</span>
-          <div className="flex items-center gap-3">
-            {t.footerWords.map((word, idx) => (
-              <React.Fragment key={idx}>
-                {idx > 0 && <span>·</span>}
-                <span>{word}</span>
-              </React.Fragment>
-            ))}
-          </div>
         </div>
       </footer>
     </div>

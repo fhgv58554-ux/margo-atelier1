@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
+    "@paypal/react-paypal-js": "^10.5.2",
     "@supabase/supabase-js": "^2.117.2",
     "@tailwindcss/vite": "^4.3.3",
     "@vercel/node": "^5.5.16",
@@ -23,6 +24,7 @@
     "dotenv": "^17.2.3",
     "esbuild": "^0.27.0",
     "express": "^4.21.2",
+    "html2canvas": "^1.4.1",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "nodemailer": "^10.0.13",

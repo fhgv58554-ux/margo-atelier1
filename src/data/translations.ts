@@ -12,8 +12,95 @@ export interface TranslationDict {
     privacy: { title: string; desc: string };
   };
   startBtn: string;
+  bookConsultationBtn: string;
+  bookConsultationHint: string;
+  startBtnHint: string;
+  virtualTryOnBtn: string;
+  virtualTryOnHint: string;
+  virtualTryOnPromo: string;
+  exploreIntroBadge: string;
+  exploreIntroTitle: string;
+  exploreIntroTitleItalic: string;
+  exploreIntroBody: string[];
+  exploreIntroNext: string;
+  bookBadge: string;
+  bookTitle: string;
+  bookTitleItalic: string;
+  bookSubtitle: string;
+  bookNameLabel: string;
+  bookNamePlaceholder: string;
+  bookWaLabel: string;
+  bookWaPlaceholder: string;
+  bookSubmitBtn: string;
+  bookSubmitting: string;
+  bookSuccessTitle: string;
+  bookSuccessText: (id: string) => string;
+  bookError: string;
+  bookBackHome: string;
+  tryonBadge: string;
+  tryonTitle: string;
+  tryonTitleItalic: string;
+  tryonIntro: string[];
+  tryonOriginalLabel: string;
+  tryonResultLabel: string;
+  tryonDressLabel: string;
+  tryonExamplesLabel: string;
+  tryonVideoLabel: string;
+  tryonPriceNote: string;
+  tryonPricingTitle: string;
+  tryonPackageOneTitle: string;
+  tryonPackageOneBody: string;
+  tryonPackageThreeTitle: string;
+  tryonPackageThreeBody: string;
+  tryonHowTitle: string;
+  tryonHowSteps: string[];
+  tryonPricingNotes: string[];
+  tryonTariffTitle: string;
+  tryonTariffSubtitle: string;
+  tryonTariffOneTitle: string;
+  tryonTariffOnePrice: string;
+  tryonTariffOneDesc: string;
+  tryonTariffThreeTitle: string;
+  tryonTariffThreePrice: string;
+  tryonTariffThreeDesc: string;
+  tryonTariffBack: string;
+  tryonPayTitle: string;
+  tryonPaySubtitle: (amount: string) => string;
+  tryonSaAgreement: string;
+  tryonPayBtn: string;
+  tryonPayBack: string;
+  tryonPayLoading: string;
+  tryonPayNotConfigured: string;
+  tryonPayError: string;
+  tryonNameLabel: string;
+  tryonNamePlaceholder: string;
+  tryonWaLabel: string;
+  tryonWaPlaceholder: string;
+  tryonNoteLabel: string;
+  tryonNotePlaceholder: string;
+  tryonUploadTitle: string;
+  tryonUploadHint: string;
+  tryonUploadLimits: string;
+  tryonUploadMax: string;
+  tryonUploadRequired: string;
+  tryonAtelierTitle: string;
+  tryonAtelierHint: string;
+  tryonAtelierBtn: string;
+  tryonAtelierMax: string;
+  tryonAtelierRequired: string;
+  tryonAtelierSelected: string;
+  tryonOrderNumberLabel: string;
+  tryonSubmitBtn: string;
+  tryonWhatsappHelp: string;
+  tryonSubmitting: string;
+  tryonSuccessTitle: string;
+  tryonSuccessText: (id: string) => string;
+  tryonError: string;
+  tryonBackHome: string;
   citiesFooter: string;
   citiesFooterSub: string;
+  headerWhatsappLabel: string;
+  headerWhatsappNumber: string;
   consentTitle: string;
   consentIntro: string;
   consentTermsTitle: string;
@@ -216,6 +303,26 @@ export interface TranslationDict {
   sendDossierChoice: string;
   btnBookWhatsapp: string;
   btnSendTelegram: string;
+  btnSendDossier: string;
+  btnDownloadDossier: string;
+  btnDownloadingDossier: string;
+  dossierVisualHeading: string;
+  dossierVisualSaved: string;
+  dossierVisualTitle: string;
+  dossierVisualClient: string;
+  dossierVisualPriorities: string;
+  dossierVisualPhotos: string;
+  dossierFieldName: string;
+  dossierFieldLocation: string;
+  dossierFieldOccasion: string;
+  dossierFieldDate: string;
+  dossierFieldBudget: string;
+  dossierFieldSilhouette: string;
+  dossierFieldStyle: string;
+  dossierFieldColours: string;
+  dossierFieldFit: string;
+  dossierFieldSize: string;
+  dossierFieldHeight: string;
   btnSending: string;
   btnSent: string;
   thankYouOrderLabel: string;
@@ -268,23 +375,128 @@ export interface TranslationDict {
 export const TRANSLATIONS: Record<SupportedLanguage, TranslationDict> = {
   ru: {
     brandName: 'MARGO Bridal & Special Occasion',
-    brandTagline: 'Свадебные и вечерние платья · Ткани · Аксессуары',
+    brandTagline: 'Made-to-order bridal & evening wear',
     badge: 'Подбор образа',
     appTitle: 'Ваш образ для особенного события',
     appIntro: [
       'Свадебные и вечерние платья, красивые ткани и аксессуары — в MARGO Bridal & Special Occasion в Onrus, Western Cape, South Africa.',
       'Этот короткий опрос поможет вам определиться с пожеланиями, а нам — подготовиться к вашей первой встрече.',
-      'Расскажите о событии и выберите образы, которые вам нравятся. На консультации мы обсудим подходящие силуэты, ткани и детали — для выбора готового платья или заказа по выбранной модели.',
-      'Встречи в ателье — по предварительной записи. Онлайн-консультации также доступны.',
     ],
     stats: {
       time: { title: 'Короткий опрос', desc: 'Ваше событие и пожелания' },
       ai: { title: 'Ваш стиль', desc: 'Силуэты, ткани и детали' },
       privacy: { title: 'Личная встреча', desc: 'В ателье или онлайн' },
     },
-    startBtn: 'Начать подбор образа',
-    citiesFooter: 'Onrus · Western Cape · South Africa',
-    citiesFooterSub: 'В ателье и онлайн',
+    startBtn: 'Explore Your Look',
+    bookConsultationBtn: 'Book a Consultation',
+    bookConsultationHint: 'Короткая форма анкеты для записи на консультацию',
+    startBtnHint: 'Выбирайте силуэты, цвета и детали, которые вам нравятся',
+    virtualTryOnBtn: 'Order a Virtual Try-On',
+    virtualTryOnHint: 'Увидеть выбранный образ на своём фото — отдельная платная услуга',
+    virtualTryOnPromo:
+      'У Вас есть уникальная возможность увидеть выбранную модель платья на себе до его пошива. Данная услуга оплачивается отдельно.',
+    exploreIntroBadge: 'Подбор образа',
+    exploreIntroTitle: 'Как проходит',
+    exploreIntroTitleItalic: 'подбор',
+    exploreIntroBody: [
+      'Расскажите о событии и выберите образы, которые вам нравятся. На консультации мы обсудим подходящие силуэты, ткани и детали — для выбора готового платья или заказа по выбранной модели.',
+      'Встречи в ателье — по предварительной записи. Онлайн-консультации также доступны.',
+    ],
+    exploreIntroNext: 'Далее',
+    bookBadge: 'Быстрая заявка',
+    bookTitle: 'Запись на',
+    bookTitleItalic: 'консультацию',
+    bookSubtitle: 'Короткая форма — без полного подбора образа. Мы свяжемся с вами в WhatsApp.',
+    bookNameLabel: 'Имя',
+    bookNamePlaceholder: 'Как к вам обращаться',
+    bookWaLabel: 'WhatsApp',
+    bookWaPlaceholder: '+27 / +7 / +39…',
+    bookSubmitBtn: 'Оставить заявку',
+    bookSubmitting: 'Отправка…',
+    bookSuccessTitle: 'Заявка отправлена',
+    bookSuccessText: (id) => `Номер заявки ${id}. Координатор ателье напишет вам в WhatsApp.`,
+    bookError: 'Не удалось отправить. Проверьте данные и попробуйте снова.',
+    bookBackHome: 'На главную',
+    tryonBadge: 'Платная услуга',
+    tryonTitle: 'Virtual',
+    tryonTitleItalic: 'Try-On',
+    tryonIntro: [
+      'Посмотрите выбранный образ на своей фотографии',
+      'Представьте, как выбранная модель платья или цвет могут выглядеть на вас, прежде чем оформлять заказ. Каждое изображение создаётся и проверяется лично дизайнером MARGO.',
+    ],
+    tryonOriginalLabel: 'Ваше фото',
+    tryonResultLabel: 'Результат примерки',
+    tryonDressLabel: 'Модель платья',
+    tryonExamplesLabel: 'Пример результата',
+    tryonVideoLabel: 'Видео примерки',
+    tryonPriceNote: 'Услуга оплачивается отдельно. Детали и стоимость подтвердим в WhatsApp.',
+    tryonPricingTitle: 'Стоимость услуги',
+    tryonPackageOneTitle: 'Один образ — R350',
+    tryonPackageOneBody:
+      'Одно выбранное платье на вашей фотографии. Включает одно итоговое изображение и одну небольшую корректировку.',
+    tryonPackageThreeTitle: 'Три образа — R750',
+    tryonPackageThreeBody:
+      'Сравните три модели платья или варианта цвета на одной фотографии. Включает три итоговых изображения и один раунд небольших корректировок.',
+    tryonHowTitle: 'Как это работает',
+    tryonHowSteps: [
+      'Загрузите чёткую фотографию в полный рост.',
+      'Выберите один или три образа.',
+      'Оплатите услугу.',
+      'Получите изображения в течение двух рабочих дней после получения оплаты, подходящей фотографии и выбранных образов.',
+    ],
+    tryonPricingNotes: [
+      'Небольшие корректировки включают изменение цвета или длины рукава. Другая модель платья считается новым образом.',
+      'Услуга доступна отдельно — заказывать платье необязательно. Если вы закажете платье в MARGO, стоимость виртуальной примерки будет зачтена в его стоимость.',
+      'Виртуальная примерка помогает представить образ. Точная посадка, ткань и конструкция уточняются на консультации и примерках в процессе пошива. Все платья изготавливаются только на заказ.',
+    ],
+    tryonTariffTitle: 'Выберите тариф',
+    tryonTariffSubtitle: 'Оплата через PayPal · валюта ZAR (ЮАР)',
+    tryonTariffOneTitle: 'Один образ',
+    tryonTariffOnePrice: 'R350',
+    tryonTariffOneDesc: 'Одно платье на вашей фотографии · одно итоговое изображение · одна небольшая корректировка',
+    tryonTariffThreeTitle: 'Три образа',
+    tryonTariffThreePrice: 'R750',
+    tryonTariffThreeDesc: 'Три модели или цвета на одной фотографии · три итоговых изображения · один раунд корректировок',
+    tryonTariffBack: 'Назад к заявке',
+    tryonPayTitle: 'Оплата PayPal',
+    tryonPaySubtitle: (amount) => `Сумма заказа: ${amount} ZAR`,
+    tryonSaAgreement:
+      'Я подтверждаю договор на оказание услуг виртуальной примерки в соответствии с законодательством Южно-Африканской Республики (ЮАР), включая Consumer Protection Act 68 of 2008, и соглашаюсь с условиями и стоимостью выбранного тарифа.',
+    tryonPayBtn: 'Оплатить',
+    tryonPayBack: 'К выбору тарифа',
+    tryonPayLoading: 'Загрузка PayPal…',
+    tryonPayNotConfigured:
+      'PayPal ещё не подключён. Добавьте PAYPAL_CLIENT_ID и PAYPAL_CLIENT_SECRET в настройки сервера.',
+    tryonPayError: 'Не удалось провести оплату. Попробуйте ещё раз.',
+    tryonNameLabel: 'Имя',
+    tryonNamePlaceholder: 'Как к вам обращаться',
+    tryonWaLabel: 'WhatsApp',
+    tryonWaPlaceholder: '+27 / +7 / +39…',
+    tryonNoteLabel: 'Пожелания',
+    tryonNotePlaceholder: 'Повод, стиль платья, ссылки на референсы…',
+    tryonUploadTitle: 'Ваши фото',
+    tryonUploadHint: 'Загрузите до 4 личных фото для примерки',
+    tryonUploadLimits: 'JPG, PNG или WebP · до 8 МБ каждое · максимум 4',
+    tryonUploadMax: 'Можно загрузить не более 4 фото',
+    tryonUploadRequired: 'Добавьте хотя бы одно личное фото',
+    tryonAtelierTitle: 'Образы ателье',
+    tryonAtelierHint: 'Выберите один или несколько образов из коллекции MARGO для виртуальной примерки',
+    tryonAtelierBtn: 'Добавить образ из нашего ателье',
+    tryonAtelierMax: 'Можно выбрать не более 3 образов ателье',
+    tryonAtelierRequired: 'Выберите хотя бы один образ из ателье',
+    tryonAtelierSelected: 'Выбранные образы',
+    tryonOrderNumberLabel: 'Номер заказа',
+    tryonSubmitBtn: 'Заказать',
+    tryonWhatsappHelp: 'Если у Вас остались вопросы, Вы можете обратиться к нам по WhatsApp',
+    tryonSubmitting: 'Отправка…',
+    tryonSuccessTitle: 'Заявка принята',
+    tryonSuccessText: (id) => `Номер заказа ${id}. Мы свяжемся в WhatsApp, чтобы уточнить фото и образы.`,
+    tryonError: 'Не удалось отправить. Попробуйте ещё раз.',
+    tryonBackHome: 'На главную',
+    citiesFooter: 'By appointment in Onrus · Online consultations available',
+    citiesFooterSub: '',
+    headerWhatsappLabel: 'Консультация WhatsApp',
+    headerWhatsappNumber: '+27 76 364 3600',
     consentTitle: 'Согласие пользователя',
     consentIntro:
       'Перед началом подбора образа подтвердите согласие с условиями использования и обработкой персональных данных.',
@@ -496,6 +708,26 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDict> = {
     sendDossierChoice: 'Отправить досье в ателье',
     btnBookWhatsapp: 'Через WhatsApp',
     btnSendTelegram: 'Через Telegram',
+    btnSendDossier: 'Отправить досье в ателье',
+    btnDownloadDossier: 'Сохранить картинку досье',
+    btnDownloadingDossier: 'Сохранение картинки…',
+    dossierVisualHeading: 'Ваше досье',
+    dossierVisualSaved: 'Сохранённая картинка',
+    dossierVisualTitle: 'Визуальное досье',
+    dossierVisualClient: 'Клиент',
+    dossierVisualPriorities: 'Приоритеты',
+    dossierVisualPhotos: 'Фото',
+    dossierFieldName: 'Имя',
+    dossierFieldLocation: 'Локация',
+    dossierFieldOccasion: 'Повод',
+    dossierFieldDate: 'Дата',
+    dossierFieldBudget: 'Бюджет',
+    dossierFieldSilhouette: 'Силуэт',
+    dossierFieldStyle: 'Стиль',
+    dossierFieldColours: 'Цвета',
+    dossierFieldFit: 'Посадка',
+    dossierFieldSize: 'Размер',
+    dossierFieldHeight: 'Рост',
     btnSending: 'Отправка...',
     btnSent: 'Досье отправлено',
     thankYouOrderLabel: 'Номер заказа',
@@ -540,28 +772,133 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDict> = {
     statusFitting: 'Макетирование (Toile)',
     statusCompleted: 'В производстве',
 
-    footerSlogan: 'MARGO Bridal & Special Occasion · Onrus',
+    footerSlogan: 'By appointment in Onrus · Online consultations available',
     footerWords: ['Свадебные платья', 'Вечерние образы', 'Ткани и аксессуары'],
   },
   en: {
     brandName: 'MARGO Bridal & Special Occasion',
-    brandTagline: 'Bridal & Evening Dresses · Fabrics · Accessories',
+    brandTagline: 'Made-to-order bridal & evening wear',
     badge: 'Look selection',
     appTitle: 'Your look for a special occasion',
     appIntro: [
       'Bridal and evening dresses, beautiful fabrics and accessories — at MARGO Bridal & Special Occasion in Onrus, Western Cape, South Africa.',
       'This short questionnaire helps you clarify your wishes and helps us prepare for your first appointment.',
-      'Tell us about your event and choose looks you like. At the consultation we will discuss suitable silhouettes, fabrics and details — to select a ready dress or order from a chosen model.',
-      'Atelier appointments are by prior booking. Online consultations are also available.',
     ],
     stats: {
       time: { title: 'Short survey', desc: 'Your event and wishes' },
       ai: { title: 'Your style', desc: 'Silhouettes, fabrics & details' },
       privacy: { title: 'Private meeting', desc: 'In atelier or online' },
     },
-    startBtn: 'Start look selection',
-    citiesFooter: 'Onrus · Western Cape · South Africa',
-    citiesFooterSub: 'In atelier and online',
+    startBtn: 'Explore Your Look',
+    bookConsultationBtn: 'Book a Consultation',
+    bookConsultationHint: 'A short form to book your consultation',
+    startBtnHint: 'Choose silhouettes, colours and details you love',
+    virtualTryOnBtn: 'Order a Virtual Try-On',
+    virtualTryOnHint: 'See your chosen look on your photo — a separate paid service',
+    virtualTryOnPromo:
+      'You have a unique opportunity to see your chosen dress model on yourself before it is made. This service is paid separately.',
+    exploreIntroBadge: 'Look selection',
+    exploreIntroTitle: 'How the',
+    exploreIntroTitleItalic: 'journey works',
+    exploreIntroBody: [
+      'Tell us about your event and choose looks you like. At the consultation we will discuss suitable silhouettes, fabrics and details — to select a ready dress or order from a chosen model.',
+      'Atelier appointments are by prior booking. Online consultations are also available.',
+    ],
+    exploreIntroNext: 'Continue',
+    bookBadge: 'Quick request',
+    bookTitle: 'Book a',
+    bookTitleItalic: 'consultation',
+    bookSubtitle: 'A short form — without the full look journey. We will contact you on WhatsApp.',
+    bookNameLabel: 'Name',
+    bookNamePlaceholder: 'How should we address you',
+    bookWaLabel: 'WhatsApp',
+    bookWaPlaceholder: '+27 / +7 / +39…',
+    bookSubmitBtn: 'Submit request',
+    bookSubmitting: 'Sending…',
+    bookSuccessTitle: 'Request sent',
+    bookSuccessText: (id) => `Reference ${id}. Our coordinator will message you on WhatsApp.`,
+    bookError: 'Could not send. Check your details and try again.',
+    bookBackHome: 'Back home',
+    tryonBadge: 'Paid service',
+    tryonTitle: 'Virtual',
+    tryonTitleItalic: 'Try-On',
+    tryonIntro: [
+      'See your chosen look on your own photograph',
+      'Imagine how a selected dress model or colour could look on you before placing an order. Each image is created and reviewed personally by the MARGO designer.',
+    ],
+    tryonOriginalLabel: 'Your photo',
+    tryonResultLabel: 'Try-on result',
+    tryonDressLabel: 'Dress model',
+    tryonExamplesLabel: 'Example result',
+    tryonVideoLabel: 'Try-on video',
+    tryonPriceNote: 'This is a separate paid service. Details and pricing are confirmed on WhatsApp.',
+    tryonPricingTitle: 'Service pricing',
+    tryonPackageOneTitle: 'One look — R350',
+    tryonPackageOneBody:
+      'One chosen dress on your photograph. Includes one final image and one small adjustment.',
+    tryonPackageThreeTitle: 'Three looks — R750',
+    tryonPackageThreeBody:
+      'Compare three dress models or colour options on one photograph. Includes three final images and one round of small adjustments.',
+    tryonHowTitle: 'How it works',
+    tryonHowSteps: [
+      'Upload a clear full-length photograph.',
+      'Choose one or three looks.',
+      'Pay for the service.',
+      'Receive your images within two working days after payment, a suitable photo, and your selected looks are received.',
+    ],
+    tryonPricingNotes: [
+      'Small adjustments include a colour change or sleeve length. A different dress model counts as a new look.',
+      'The service is available separately — ordering a dress is not required. If you order a dress with MARGO, the virtual try-on fee is credited toward its cost.',
+      'Virtual try-on helps you visualise a look. Exact fit, fabric and construction are confirmed in consultation and fittings during the making process. All dresses are made to order only.',
+    ],
+    tryonTariffTitle: 'Choose a package',
+    tryonTariffSubtitle: 'Pay with PayPal · currency ZAR (South Africa)',
+    tryonTariffOneTitle: 'One look',
+    tryonTariffOnePrice: 'R350',
+    tryonTariffOneDesc: 'One dress on your photograph · one final image · one small adjustment',
+    tryonTariffThreeTitle: 'Three looks',
+    tryonTariffThreePrice: 'R750',
+    tryonTariffThreeDesc: 'Three models or colours on one photograph · three final images · one round of adjustments',
+    tryonTariffBack: 'Back to form',
+    tryonPayTitle: 'PayPal checkout',
+    tryonPaySubtitle: (amount) => `Order total: ${amount} ZAR`,
+    tryonSaAgreement:
+      'I confirm the Virtual Try-On service agreement under the laws of the Republic of South Africa, including the Consumer Protection Act 68 of 2008, and I accept the terms and price of the selected package.',
+    tryonPayBtn: 'Pay',
+    tryonPayBack: 'Back to packages',
+    tryonPayLoading: 'Loading PayPal…',
+    tryonPayNotConfigured:
+      'PayPal is not connected yet. Add PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET to the server settings.',
+    tryonPayError: 'Payment could not be completed. Please try again.',
+    tryonNameLabel: 'Name',
+    tryonNamePlaceholder: 'How should we address you',
+    tryonWaLabel: 'WhatsApp',
+    tryonWaPlaceholder: '+27 / +7 / +39…',
+    tryonNoteLabel: 'Notes',
+    tryonNotePlaceholder: 'Occasion, dress style, reference links…',
+    tryonUploadTitle: 'Your photos',
+    tryonUploadHint: 'Upload up to 4 personal photos for the try-on',
+    tryonUploadLimits: 'JPG, PNG or WebP · up to 8 MB each · max 4',
+    tryonUploadMax: 'You can upload up to 4 photos',
+    tryonUploadRequired: 'Please add at least one personal photo',
+    tryonAtelierTitle: 'Atelier looks',
+    tryonAtelierHint: 'Choose one or more looks from the MARGO collection for your virtual try-on',
+    tryonAtelierBtn: 'Add a look from our atelier',
+    tryonAtelierMax: 'You can select up to 3 atelier looks',
+    tryonAtelierRequired: 'Please select at least one atelier look',
+    tryonAtelierSelected: 'Selected looks',
+    tryonOrderNumberLabel: 'Order number',
+    tryonSubmitBtn: 'Order',
+    tryonWhatsappHelp: 'If you still have questions, you can contact us on WhatsApp',
+    tryonSubmitting: 'Sending…',
+    tryonSuccessTitle: 'Request received',
+    tryonSuccessText: (id) => `Order number ${id}. We will message you on WhatsApp about photos and looks.`,
+    tryonError: 'Could not send. Please try again.',
+    tryonBackHome: 'Back home',
+    citiesFooter: 'By appointment in Onrus · Online consultations available',
+    citiesFooterSub: '',
+    headerWhatsappLabel: 'Consultation WhatsApp',
+    headerWhatsappNumber: '+27 76 364 3600',
     consentTitle: 'User agreement',
     consentIntro:
       'Before starting look selection, please confirm the terms of use and consent to personal data processing.',
@@ -773,6 +1110,26 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDict> = {
     sendDossierChoice: 'Send dossier to the atelier',
     btnBookWhatsapp: 'Via WhatsApp',
     btnSendTelegram: 'Via Telegram',
+    btnSendDossier: 'Send dossier to the atelier',
+    btnDownloadDossier: 'Save dossier image',
+    btnDownloadingDossier: 'Saving image…',
+    dossierVisualHeading: 'Your dossier',
+    dossierVisualSaved: 'Saved image',
+    dossierVisualTitle: 'Visual dossier',
+    dossierVisualClient: 'Client',
+    dossierVisualPriorities: 'Priorities',
+    dossierVisualPhotos: 'Photos',
+    dossierFieldName: 'Name',
+    dossierFieldLocation: 'Location',
+    dossierFieldOccasion: 'Occasion',
+    dossierFieldDate: 'Date',
+    dossierFieldBudget: 'Budget',
+    dossierFieldSilhouette: 'Silhouette',
+    dossierFieldStyle: 'Style',
+    dossierFieldColours: 'Colours',
+    dossierFieldFit: 'Fit',
+    dossierFieldSize: 'Size',
+    dossierFieldHeight: 'Height',
     btnSending: 'Sending...',
     btnSent: 'Dossier sent',
     thankYouOrderLabel: 'Order number',
@@ -817,7 +1174,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDict> = {
     statusFitting: 'Toile Prototype',
     statusCompleted: 'In Production',
 
-    footerSlogan: 'MARGO Bridal & Special Occasion · Onrus',
+    footerSlogan: 'By appointment in Onrus · Online consultations available',
     footerWords: ['Bridal dresses', 'Evening looks', 'Fabrics & accessories'],
   },
 };

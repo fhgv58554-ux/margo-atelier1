@@ -69,7 +69,7 @@ export const OCCASIONS_DATA: LocalizedOccasion[] = [
       en: 'Evening outing',
     },
     description: {
-      ru: 'Элегантные платья для вечернего выхода — выразительные силуэты, мягкие драпировки и красивые детали. Выберите настроение, которое вам близко.',
+      ru: 'Элегантные платья для вечернего выхода — выразительные силуэты, мягкие драпировки и красивые детали.',
       en: 'Elegant dresses for an evening out — expressive silhouettes, soft draping and beautiful details. Choose the mood that feels close to you.',
     },
     image: occasionEveningImg,
@@ -109,7 +109,7 @@ export const OCCASIONS_DATA: LocalizedOccasion[] = [
       en: 'Order by model',
     },
     description: {
-      ru: 'Выберите модель и ткань в нашем ателье. Мы обсудим посадку, детали, сроки и возможность изготовления платья по вашим меркам.',
+      ru: 'По Вашим эскизам подберем модель и ткань в нашем ателье. Мы обсудим посадку, детали, сроки и возможность изготовления платья по вашим меркам.',
       en: 'Choose a model and fabric in our atelier. We will discuss fit, details, timing and the possibility of making the dress to your measurements.',
     },
     image: occasionCustomImg,

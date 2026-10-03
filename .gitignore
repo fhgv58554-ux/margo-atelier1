@@ -8,3 +8,5 @@ coverage/
 !.env.example
 data/consultations.json
 report/
+
+.vercel

@@ -1,22 +1,24 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import {
   Sparkles,
-  Send,
-  MessageCircle,
   CheckCircle2,
-  Share2,
   Check,
+  ArrowRight,
+  Download,
 } from 'lucide-react';
 import { ConsultationDossier } from '../types';
 import { CAMPAIGN_ASSETS, getColours, getFitPreferences, getSilhouettes, getStyles } from '../data/atelierContent';
 import { SupportedLanguage, TRANSLATIONS } from '../data/translations';
 import { staggerContainer, microFadeUp, microFadeUpSubtle } from '../utils/motion';
+import { DossierVisualCard } from './DossierVisualCard';
+import { captureDossierImage } from '../utils/dossierImage';
 
 interface SummaryViewProps {
   dossier: ConsultationDossier;
   onEditStep: (step: any) => void;
   onReset: () => void;
+  onVirtualTryOn: () => void;
   lang: SupportedLanguage;
 }
 
@@ -24,6 +26,7 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
   dossier,
   onEditStep,
   onReset,
+  onVirtualTryOn,
   lang,
 }) => {
   const t = TRANSLATIONS[lang];
@@ -68,16 +71,16 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
   const [submissionSuccess, setSubmissionSuccess] = useState<boolean>(false);
   const [showThankYou, setShowThankYou] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
-  const [submittingChannel, setSubmittingChannel] = useState<'whatsapp' | 'telegram' | null>(null);
   const [dossierId, setDossierId] = useState<string>(dossier.id || 'MARGO-8492');
-  const [copiedLink, setCopiedLink] = useState(false);
   const [submitError, setSubmitError] = useState<string>('');
+  const [savingImage, setSavingImage] = useState(false);
+  const [savedPreviewUrl, setSavedPreviewUrl] = useState('');
+  const dossierCardRef = useRef<HTMLDivElement>(null);
 
-  // Submit dossier server-side — no redirect to WhatsApp / Telegram apps
-  const handleSendToAtelier = async (preferredChannel: 'whatsapp' | 'telegram') => {
+  // Submit dossier server-side → admin + Telegram + email
+  const handleSendToAtelier = async () => {
     if (submitting || submissionSuccess) return;
     setSubmitting(true);
-    setSubmittingChannel(preferredChannel);
     setSubmitError('');
     try {
       const res = await fetch('/api/consultations', {
@@ -85,7 +88,11 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...dossier,
-          preferredChannel,
+          preferredChannel: 'telegram',
+          contact: {
+            ...dossier.contact,
+            preferredLanguage: lang === 'ru' ? 'Русский' : 'English',
+          },
           silhouetteLabel:
             silhouetteLabel === (lang === 'ru' ? 'Не выбран' : 'Not selected')
               ? ''
@@ -131,14 +138,29 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
       );
     } finally {
       setSubmitting(false);
-      setSubmittingChannel(null);
     }
   };
 
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2500);
+  const handleSaveDossierImage = async () => {
+    if (savingImage || !dossierCardRef.current) return;
+    setSavingImage(true);
+    setSubmitError('');
+    try {
+      const dataUrl = await captureDossierImage(
+        dossierCardRef.current,
+        `${dossierId || 'MARGO-dossier'}.png`
+      );
+      setSavedPreviewUrl(dataUrl);
+    } catch (err) {
+      console.error('Dossier image error:', err);
+      setSubmitError(
+        lang === 'ru'
+          ? 'Не удалось сохранить картинку досье. Попробуйте ещё раз.'
+          : 'Could not save the dossier image. Please try again.'
+      );
+    } finally {
+      setSavingImage(false);
+    }
   };
 
   // Find occasion image
@@ -173,6 +195,37 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
         </p>
       </motion.div>
 
+      <motion.section variants={microFadeUp} className="mb-6 sm:mb-8">
+        <p className="text-center text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-[#867B71] mb-3">
+          {t.dossierVisualHeading}
+        </p>
+        <DossierVisualCard
+          ref={dossierCardRef}
+          dossier={dossier}
+          dossierId={dossierId}
+          occasionImg={occasionImg}
+          silhouetteLabel={silhouetteLabel}
+          styleLabel={styleLabel}
+          colourLabel={colourLabel}
+          colourItems={colourItems}
+          fitLabel={fitLabel}
+          sizeLabel={sizeLabel}
+          lang={lang}
+        />
+        {savedPreviewUrl && (
+          <div className="mt-3 rounded-2xl overflow-hidden border border-[#C8E1CE] bg-[#F0F7F2] p-2">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[#2E8B4A] text-center mb-2">
+              {t.dossierVisualSaved}
+            </p>
+            <img
+              src={savedPreviewUrl}
+              alt={dossierId}
+              className="w-full h-auto rounded-xl border border-[#D9E8DC]"
+            />
+          </div>
+        )}
+      </motion.section>
+
       {showThankYou && (
         <div
           className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-[#1A1816]/45 backdrop-blur-[2px] p-4"
@@ -197,6 +250,21 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
               className="w-full py-3 rounded-full bg-[#1A1816] text-[#FAF8F5] text-xs uppercase tracking-[0.18em]"
             >
               {t.thankYouClose}
+            </button>
+            <p className="mt-4 text-[11px] sm:text-xs text-[#61574D] font-light leading-relaxed">
+              {t.virtualTryOnPromo}
+            </p>
+            <button
+              id="thankyou-virtual-tryon-btn"
+              type="button"
+              onClick={() => {
+                setShowThankYou(false);
+                onVirtualTryOn();
+              }}
+              className="mt-2 w-full py-2.5 sm:py-3.5 px-5 rounded-full border border-[#C9BEB0] bg-[#F6F1EA] text-[#1A1816] hover:border-[#1A1816] transition-all duration-200 flex items-center justify-center gap-2 text-[9px] sm:text-xs font-medium tracking-[0.14em] uppercase cursor-pointer"
+            >
+              <span>{t.virtualTryOnBtn}</span>
+              <ArrowRight className="w-3.5 h-3.5 text-[#8C7D70]" />
             </button>
           </div>
         </div>
@@ -339,65 +407,26 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
 
       {/* PRIMARY CTA ACTIONS */}
       <motion.div variants={microFadeUp} className="space-y-3 mb-8">
-        <p className="text-center text-[11px] sm:text-xs uppercase tracking-[0.2em] text-[#6B5E53] font-medium">
-          {t.sendDossierChoice}
-        </p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {/* WhatsApp — server delivery, no wa.me redirect */}
-          <button
-            id="whatsapp-booking-cta"
-            type="button"
-            disabled={submitting || submissionSuccess}
-            onClick={() => handleSendToAtelier('whatsapp')}
-            className={`w-full py-4 px-5 rounded-full text-xs font-medium tracking-[0.14em] uppercase transition-all flex items-center justify-center gap-2.5 border cursor-pointer ${
-              submissionSuccess
-                ? 'bg-[#EAE2D6] text-[#61564C] border-[#D9D1C5]'
-                : 'bg-[#25D366] text-white border-[#25D366] hover:bg-[#20BE5C] active:scale-[0.99] shadow-lg shadow-green-900/10'
-            }`}
-          >
-            {submissionSuccess ? (
-              <>
-                <Check className="w-4 h-4 shrink-0 text-[#2E8B4A]" />
-                <span>{t.btnSent}</span>
-              </>
-            ) : (
-              <>
-                <MessageCircle className="w-4 h-4 shrink-0" />
-                <span>
-                  {submitting && submittingChannel === 'whatsapp' ? t.btnSending : t.btnBookWhatsapp}
-                </span>
-              </>
-            )}
-          </button>
-
-          {/* Telegram */}
-          <button
-            id="telegram-dossier-btn"
-            type="button"
-            disabled={submitting || submissionSuccess}
-            onClick={() => handleSendToAtelier('telegram')}
-            className={`w-full py-4 px-5 rounded-full text-xs font-medium tracking-[0.14em] uppercase transition-all flex items-center justify-center gap-2.5 border cursor-pointer ${
-              submissionSuccess
-                ? 'bg-[#EAE2D6] text-[#61564C] border-[#D9D1C5]'
-                : 'bg-[#229ED9] text-white border-[#229ED9] hover:bg-[#1B8BC0] active:scale-[0.99] shadow-lg shadow-sky-900/10'
-            }`}
-          >
-            {submissionSuccess ? (
-              <>
-                <Check className="w-4 h-4 shrink-0 text-[#2E8B4A]" />
-                <span>{t.btnSent}</span>
-              </>
-            ) : (
-              <>
-                <Send className="w-4 h-4 shrink-0" />
-                <span>
-                  {submitting && submittingChannel === 'telegram' ? t.btnSending : t.btnSendTelegram}
-                </span>
-              </>
-            )}
-          </button>
-        </div>
+        <button
+          id="send-dossier-btn"
+          type="button"
+          disabled={submitting || submissionSuccess}
+          onClick={handleSendToAtelier}
+          className={`w-full py-4 px-5 rounded-full text-xs font-medium tracking-[0.14em] uppercase transition-all border ${
+            submissionSuccess
+              ? 'bg-[#EAE2D6] text-[#61564C] border-[#D9D1C5]'
+              : 'bg-[#1A1816] text-[#FAF8F5] border-[#1A1816] hover:bg-[#2C2723] active:scale-[0.99] cursor-pointer'
+          }`}
+        >
+          {submissionSuccess ? (
+            <span className="inline-flex items-center justify-center gap-2">
+              <Check className="w-4 h-4 shrink-0 text-[#2E8B4A]" />
+              {t.btnSent}
+            </span>
+          ) : (
+            <span>{submitting ? t.btnSending : t.btnSendDossier}</span>
+          )}
+        </button>
 
         {submitError && (
           <p className="text-center text-xs text-[#A14A3A] leading-relaxed px-2" role="alert">
@@ -405,15 +434,18 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
           </p>
         )}
 
-        <button
-          id="share-dossier-btn"
-          type="button"
-          onClick={handleShare}
-          className="w-full py-2.5 px-4 rounded-xl bg-[#FAF8F5] border border-[#D9D1C5] text-xs text-[#54493F] hover:bg-[#F2EDE5] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-        >
-          <Share2 className="w-3.5 h-3.5" />
-          <span>{copiedLink ? t.btnCopied : t.btnShare}</span>
-        </button>
+        <div className="p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#E8E1D6]">
+          <button
+            id="download-dossier-btn"
+            type="button"
+            disabled={savingImage}
+            onClick={handleSaveDossierImage}
+            className="w-full py-3 px-4 rounded-full bg-[#F6F1EA] border border-[#D9D1C5] text-xs uppercase tracking-[0.14em] text-[#1A1816] hover:border-[#1A1816] transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>{savingImage ? t.btnDownloadingDossier : t.btnDownloadDossier}</span>
+          </button>
+        </div>
       </motion.div>
 
       {/* Edit Options / Restart */}
