@@ -300,7 +300,7 @@ export const BookConsultationView: React.FC<BookConsultationViewProps> = ({
         onClick={handleSubmit}
         className={`w-full py-4 px-5 rounded-full text-xs font-medium tracking-[0.14em] uppercase border transition-all ${
           canSubmit
-            ? 'bg-[#25D366] text-white border-[#25D366] hover:bg-[#20BE5C] cursor-pointer'
+            ? 'bg-[#1A1816] text-[#FAF8F5] border-[#1A1816] hover:bg-[#2C2723] active:scale-[0.99] cursor-pointer'
             : 'bg-[#E5DDD2] text-[#9E9488] border-[#E5DDD2] cursor-not-allowed'
         }`}
       >

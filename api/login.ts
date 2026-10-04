@@ -15,7 +15,7 @@ function normalizeSecret(value: unknown): string {
 }
 
 function adminSecret(): string {
-  return normalizeSecret(process.env.ADMIN_PASSWORD) || 'margo-admin';
+  return normalizeSecret(process.env.ADMIN_PASSWORD);
 }
 
 function safeEqual(a: string, b: string): boolean {

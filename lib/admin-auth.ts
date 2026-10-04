@@ -8,14 +8,9 @@ function normalizeSecret(value: unknown): string {
   return value.normalize('NFKC').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
 }
 
-/**
- * Admin password from env, with durable fallback so the atelier console
- * remains reachable if ADMIN_PASSWORD is missing in project env.
- */
+/** Admin password from env only. Never hardcode a default. */
 export function adminSecret(): string {
-  // Keep login working even if ADMIN_PASSWORD env is missing (local + Vercel).
-  // Prefer a strong ADMIN_PASSWORD in production project settings.
-  return normalizeSecret(process.env.ADMIN_PASSWORD) || 'margo-admin';
+  return normalizeSecret(process.env.ADMIN_PASSWORD);
 }
 
 function safeEqual(a: string, b: string): boolean {

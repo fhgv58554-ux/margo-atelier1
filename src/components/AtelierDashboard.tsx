@@ -148,11 +148,7 @@ export const AtelierDashboard: React.FC<AtelierDashboardProps> = ({ onBackToApp,
         if (res.status === 503) {
           setLoginError(t.adminLoginErrorNotConfigured);
         } else if (res.status === 401) {
-          setLoginError(
-            lang === 'ru'
-              ? 'Неверный пароль. Проверьте раскладку EN и введите: margo-admin'
-              : 'Wrong password. Use EN keyboard layout: margo-admin'
-          );
+          setLoginError(t.adminLoginErrorUnauthorized);
         } else if (res.status === 429) {
           setLoginError(
             lang === 'ru'
@@ -162,8 +158,8 @@ export const AtelierDashboard: React.FC<AtelierDashboardProps> = ({ onBackToApp,
         } else if (res.status >= 500) {
           setLoginError(
             lang === 'ru'
-              ? 'Сервер админки недоступен. Откройте http://localhost:3000 (локально пароль работает) или задайте ADMIN_PASSWORD на Vercel и сделайте Redeploy.'
-              : 'Admin server error. Use http://localhost:3000 or set ADMIN_PASSWORD on Vercel and redeploy.'
+              ? 'Сервер админки недоступен. Проверьте, что ADMIN_PASSWORD задан на хостинге, и перезапустите приложение.'
+              : 'Admin server error. Set ADMIN_PASSWORD on the host and restart the app.'
           );
         } else {
           setLoginError(typeof data.error === 'string' ? data.error : t.adminLoginError);
@@ -316,8 +312,8 @@ export const AtelierDashboard: React.FC<AtelierDashboardProps> = ({ onBackToApp,
               />
               <p className="mt-1.5 text-[10px] text-[#8A8177]">
                 {lang === 'ru'
-                  ? 'Пароль латинскими буквами (раскладка EN): margo-admin'
-                  : 'Password in Latin characters (EN layout): margo-admin'}
+                  ? 'Вводите пароль в латинской раскладке. Он задаётся в ADMIN_PASSWORD, не показывается здесь.'
+                  : 'Use a Latin keyboard layout. The password comes from ADMIN_PASSWORD and is not shown here.'}
               </p>
             </label>
             {loginError && <p className="text-xs text-[#A83D3D]">{loginError}</p>}
