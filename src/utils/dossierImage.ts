@@ -200,7 +200,7 @@ export async function captureDossierImage(input: DossierImageInput): Promise<str
   if (input.priorities?.length) {
     ctx.fillStyle = '#8A8177';
     ctx.font = '600 14px "Plus Jakarta Sans", Arial, sans-serif';
-    ctx.fillText('PRIORITIES / ПРИОРИТЕТЫ', pad, cursor);
+    ctx.fillText('PRIORITIES', pad, cursor);
     cursor += 18;
     let x = pad;
     let rowY = cursor;
@@ -260,14 +260,92 @@ export async function captureDossierImage(input: DossierImageInput): Promise<str
   const footerW = ctx.measureText(input.footer.toUpperCase()).width;
   ctx.fillText(input.footer.toUpperCase(), (width - footerW) / 2, height - 28);
 
-  const dataUrl = canvas.toDataURL('image/png');
+  const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+  const jpegBytes = dataUrlToUint8Array(jpegDataUrl);
+  const pdfBytes = buildJpegPdf(jpegBytes, width, height);
+  const pdfBlob = new Blob([Uint8Array.from(pdfBytes)], { type: 'application/pdf' });
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+
+  const filename = input.filename.replace(/\.(png|jpe?g|pdf)$/i, '') + '.pdf';
   const link = document.createElement('a');
-  link.download = input.filename.endsWith('.png') ? input.filename : `${input.filename}.png`;
-  link.href = dataUrl;
+  link.download = filename;
+  link.href = pdfUrl;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  return dataUrl;
+  URL.revokeObjectURL(pdfUrl);
+
+  return jpegDataUrl;
+}
+
+function dataUrlToUint8Array(dataUrl: string): Uint8Array {
+  const base64 = dataUrl.split(',')[1] || '';
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+/** Minimal single-page PDF wrapping a JPEG image (no external deps). */
+function buildJpegPdf(jpeg: Uint8Array, imgW: number, imgH: number): Uint8Array {
+  const encoder = new TextEncoder();
+  const objects: Uint8Array[] = [];
+  const offsets: number[] = [0];
+
+  const pushObject = (content: string | Uint8Array) => {
+    const body = typeof content === 'string' ? encoder.encode(content) : content;
+    objects.push(body);
+  };
+
+  // Page size in points — keep image aspect, max width ~595 (A4-ish) or use image size scaled
+  const maxW = 595;
+  const scale = Math.min(1, maxW / imgW);
+  const pageW = Math.round(imgW * scale);
+  const pageH = Math.round(imgH * scale);
+
+  pushObject('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+  pushObject('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n');
+  pushObject(
+    `3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Contents 4 0 R /Resources << /XObject << /Im0 5 0 R >> >> >>\nendobj\n`
+  );
+  const contentStream = `q\n${pageW} 0 0 ${pageH} 0 0 cm\n/Im0 Do\nQ\n`;
+  pushObject(
+    `4 0 obj\n<< /Length ${contentStream.length} >>\nstream\n${contentStream}endstream\nendobj\n`
+  );
+
+  const imgHeader = encoder.encode(
+    `5 0 obj\n<< /Type /XObject /Subtype /Image /Width ${imgW} /Height ${imgH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`
+  );
+  const imgFooter = encoder.encode('\nendstream\nendobj\n');
+  const imgObject = new Uint8Array(imgHeader.length + jpeg.length + imgFooter.length);
+  imgObject.set(imgHeader, 0);
+  imgObject.set(jpeg, imgHeader.length);
+  imgObject.set(imgFooter, imgHeader.length + jpeg.length);
+  pushObject(imgObject);
+
+  let pdf = encoder.encode('%PDF-1.4\n');
+  for (const obj of objects) {
+    offsets.push(pdf.length);
+    const next = new Uint8Array(pdf.length + obj.length);
+    next.set(pdf, 0);
+    next.set(obj, pdf.length);
+    pdf = next;
+  }
+
+  const xrefStart = pdf.length;
+  let xref = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (let i = 1; i <= objects.length; i += 1) {
+    xref += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
+  }
+  xref += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
+
+  const xrefBytes = encoder.encode(xref);
+  const out = new Uint8Array(pdf.length + xrefBytes.length);
+  out.set(pdf, 0);
+  out.set(xrefBytes, pdf.length);
+  return out;
 }
 
 function roundRect(

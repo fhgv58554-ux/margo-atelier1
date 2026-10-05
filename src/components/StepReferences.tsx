@@ -80,17 +80,11 @@ export const StepReferences: React.FC<StepReferencesProps> = ({
 
     filesToProcess.forEach((file) => {
       if (!file.type.startsWith('image/') || !['image/jpeg', 'image/png', 'image/webp', 'image/jpg'].includes(file.type)) {
-        setUploadError(
-          lang === 'ru'
-            ? 'Пожалуйста, выберите формат изображений (JPG, PNG, WebP).'
-            : 'Please select image files only (JPG, PNG, WebP).'
-        );
+        setUploadError('Please select image files only (JPG, PNG, WebP).');
         return;
       }
       if (file.size > 8 * 1024 * 1024) {
-        setUploadError(
-          lang === 'ru' ? 'Размер файла превышает лимит 8 МБ.' : 'File size exceeds 8MB limit.'
-        );
+        setUploadError('File size exceeds 8MB limit.');
         return;
       }
 
@@ -155,9 +149,7 @@ export const StepReferences: React.FC<StepReferencesProps> = ({
       setGallerySelected((prev) => ({ ...prev, [item.id]: dataUrl }));
       onUpdate({ references: [...references, dataUrl], referenceNotes });
     } catch {
-      setUploadError(
-        lang === 'ru' ? 'Не удалось добавить изображение.' : 'Could not add the image.'
-      );
+      setUploadError('Could not add the image.');
     }
   };
 

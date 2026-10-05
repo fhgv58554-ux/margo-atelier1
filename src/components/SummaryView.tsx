@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import {
   Sparkles,
@@ -18,7 +18,6 @@ import {
 } from '../data/atelierContent';
 import { SupportedLanguage, TRANSLATIONS } from '../data/translations';
 import { staggerContainer, microFadeUp, microFadeUpSubtle } from '../utils/motion';
-import { DossierVisualCard } from './DossierVisualCard';
 import { captureDossierImage } from '../utils/dossierImage';
 
 interface SummaryViewProps {
@@ -39,13 +38,13 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
   const t = TRANSLATIONS[lang];
   const silhouetteLabel = (() => {
     const selected = Array.isArray(dossier.silhouette) ? dossier.silhouette : [];
-    if (selected.length === 0) return lang === 'ru' ? 'Не выбран' : 'Not selected';
+    if (selected.length === 0) return 'Not selected';
     const map = Object.fromEntries(getSilhouettes(lang).map((s) => [s.id, s.name]));
     return selected.map((id) => map[id] || id).join(', ');
   })();
   const styleLabel = (() => {
     const selected = Array.isArray(dossier.style) ? dossier.style : [];
-    if (selected.length === 0) return lang === 'ru' ? 'Не выбран' : 'Not selected';
+    if (selected.length === 0) return 'Not selected';
     const map = Object.fromEntries(getStyles(lang).map((s) => [s.id, s.name]));
     return selected.map((id) => map[id] || id).join(', ');
   })();
@@ -55,23 +54,19 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
     return selected.map((id) => map[id] || { id, name: id, hex: '#B8A896' });
   })();
   const colourLabel =
-    colourItems.length === 0
-      ? lang === 'ru'
-        ? 'Не выбран'
-        : 'Not selected'
-      : colourItems.map((c) => c.name).join(', ');
+    colourItems.length === 0 ? 'Not selected' : colourItems.map((c) => c.name).join(', ');
   const fitLabel = (() => {
     const selected = Array.isArray(dossier.measurements.fitPreferences)
       ? dossier.measurements.fitPreferences
       : [];
-    if (selected.length === 0) return lang === 'ru' ? 'Не выбрана' : 'Not selected';
+    if (selected.length === 0) return 'Not selected';
     const map = Object.fromEntries(getFitPreferences(lang).map((f) => [f.id, f.title]));
     return selected.map((id) => map[id] || id).join(', ');
   })();
   const sizeLabel = (() => {
-    if (!dossier.measurements.clothingSize) return lang === 'ru' ? 'Не указан' : 'Not specified';
+    if (!dossier.measurements.clothingSize) return 'Not specified';
     if (dossier.measurements.clothingSize === 'dont_know') {
-      return lang === 'ru' ? 'Не знаю' : 'Not sure';
+      return 'Not sure';
     }
     return dossier.measurements.clothingSize;
   })();
@@ -81,8 +76,6 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
   const [dossierId, setDossierId] = useState<string>(dossier.id || 'MARGO-8492');
   const [submitError, setSubmitError] = useState<string>('');
   const [savingImage, setSavingImage] = useState(false);
-  const [savedPreviewUrl, setSavedPreviewUrl] = useState('');
-  const dossierCardRef = useRef<HTMLDivElement>(null);
 
   const occasionImg =
     dossier.occasion === 'bridal'
@@ -111,20 +104,12 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
           preferredChannel: 'telegram',
           contact: {
             ...dossier.contact,
-            preferredLanguage: lang === 'ru' ? 'Русский' : 'English',
+            preferredLanguage: 'English',
           },
-          silhouetteLabel:
-            silhouetteLabel === (lang === 'ru' ? 'Не выбран' : 'Not selected')
-              ? ''
-              : silhouetteLabel,
-          styleLabel:
-            styleLabel === (lang === 'ru' ? 'Не выбран' : 'Not selected') ? '' : styleLabel,
-          colourLabel:
-            colourLabel === (lang === 'ru' ? 'Не выбран' : 'Not selected') ? '' : colourLabel,
-          colors:
-            colourLabel === (lang === 'ru' ? 'Не выбран' : 'Not selected')
-              ? []
-              : colourItems.map((c) => c.name),
+          silhouetteLabel: silhouetteLabel === 'Not selected' ? '' : silhouetteLabel,
+          styleLabel: styleLabel === 'Not selected' ? '' : styleLabel,
+          colourLabel: colourLabel === 'Not selected' ? '' : colourLabel,
+          colors: colourLabel === 'Not selected' ? [] : colourItems.map((c) => c.name),
         }),
       });
 
@@ -135,27 +120,19 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
         setShowThankYou(true);
       } else if (res.ok) {
         setSubmitError(
-          lang === 'ru'
-            ? 'Досье сохранено, но номер не получен. Попробуйте ещё раз.'
-            : 'Dossier saved, but no reference number was returned. Please try again.'
+          'Dossier saved, but no reference number was returned. Please try again.'
         );
       } else {
         console.error('Submission rejected:', res.status, data?.error || data);
         setSubmitError(
           typeof data?.error === 'string'
             ? data.error
-            : lang === 'ru'
-              ? 'Не удалось отправить досье. Попробуйте ещё раз.'
-              : 'Could not send the dossier. Please try again.'
+            : 'Could not send the dossier. Please try again.'
         );
       }
     } catch (err) {
       console.error('Submission error:', err);
-      setSubmitError(
-        lang === 'ru'
-          ? 'Ошибка сети. Проверьте соединение и попробуйте снова.'
-          : 'Network error. Check your connection and try again.'
-      );
+      setSubmitError('Network error. Check your connection and try again.');
     } finally {
       setSubmitting(false);
     }
@@ -166,8 +143,7 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
     setSavingImage(true);
     setSubmitError('');
     try {
-      const emptyRu = new Set(['Не выбран', 'Не выбрана', 'Не указан', 'Не знаю']);
-      const emptyEn = new Set(['Not selected', 'Not specified', 'Not sure']);
+      const emptyValues = new Set(['Not selected', 'Not specified', 'Not sure']);
       const rows = [
         { label: t.dossierFieldName, value: dossier.contact.fullName },
         { label: 'WhatsApp', value: dossier.contact.whatsappPhone },
@@ -184,11 +160,11 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
         { label: t.dossierFieldHeight, value: dossier.measurements.height },
       ].filter((row) => {
         const v = String(row.value || '').trim();
-        return v && !emptyRu.has(v) && !emptyEn.has(v);
+        return v && !emptyValues.has(v);
       });
 
-      const dataUrl = await captureDossierImage({
-        filename: `${dossierId || 'MARGO-dossier'}.png`,
+      await captureDossierImage({
+        filename: `${dossierId || 'MARGO-dossier'}.pdf`,
         dossierId,
         title: t.dossierVisualTitle,
         clientName: dossier.contact.fullName || t.dossierVisualClient,
@@ -200,14 +176,9 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
         photoSrcs: Array.isArray(dossier.references) ? dossier.references.slice(0, 4) : [],
         footer: 'MARGO Bridal & Special Occasion',
       });
-      setSavedPreviewUrl(dataUrl);
     } catch (err) {
-      console.error('Dossier image error:', err);
-      setSubmitError(
-        lang === 'ru'
-          ? 'Не удалось сохранить картинку досье. Попробуйте ещё раз.'
-          : 'Could not save the dossier image. Please try again.'
-      );
+      console.error('Dossier PDF error:', err);
+      setSubmitError('Could not save the dossier PDF. Please try again.');
     } finally {
       setSavingImage(false);
     }
@@ -234,37 +205,6 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
           {t.summaryPreparedFor(dossier.contact.fullName, dossier.contact.atelierLocation)}
         </p>
       </motion.div>
-
-      <motion.section variants={microFadeUp} className="mb-6 sm:mb-8">
-        <p className="text-center text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-[#867B71] mb-3">
-          {t.dossierVisualHeading}
-        </p>
-        <DossierVisualCard
-          ref={dossierCardRef}
-          dossier={dossier}
-          dossierId={dossierId}
-          occasionImg={occasionImg}
-          silhouetteLabel={silhouetteLabel}
-          styleLabel={styleLabel}
-          colourLabel={colourLabel}
-          colourItems={colourItems}
-          fitLabel={fitLabel}
-          sizeLabel={sizeLabel}
-          lang={lang}
-        />
-        {savedPreviewUrl && (
-          <div className="mt-3 rounded-2xl overflow-hidden border border-[#C8E1CE] bg-[#F0F7F2] p-2">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-[#2E8B4A] text-center mb-2">
-              {t.dossierVisualSaved}
-            </p>
-            <img
-              src={savedPreviewUrl}
-              alt={dossierId}
-              className="w-full h-auto rounded-xl border border-[#D9E8DC]"
-            />
-          </div>
-        )}
-      </motion.section>
 
       {showThankYou && (
         <div
@@ -368,7 +308,7 @@ export const SummaryView: React.FC<SummaryViewProps> = ({
             <div className="p-2.5 rounded-xl bg-[#F6F1EA] border border-[#E9E2D8]">
               <span className="text-[9px] uppercase tracking-widest text-[#877C72] block">{t.specVenue}</span>
               <span className="font-serif text-sm text-[#1A1816] font-medium block truncate">
-                {dossier.contact.atelierLocation || (lang === 'ru' ? 'Южная Африка' : 'South Africa')}
+                {dossier.contact.atelierLocation || 'South Africa'}
               </span>
             </div>
           </div>

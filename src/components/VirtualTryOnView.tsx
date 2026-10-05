@@ -127,17 +127,11 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
       .slice(0, slots)
       .forEach((file) => {
         if (!ALLOWED.has(file.type)) {
-          setUploadError(
-            lang === 'ru'
-              ? 'Пожалуйста, выберите JPG, PNG или WebP.'
-              : 'Please use JPG, PNG or WebP.'
-          );
+          setUploadError('Please use JPG, PNG or WebP.');
           return;
         }
         if (file.size > MAX_BYTES) {
-          setUploadError(
-            lang === 'ru' ? 'Размер файла превышает 8 МБ.' : 'File size exceeds 8MB.'
-          );
+          setUploadError('File size exceeds 8MB.');
           return;
         }
         const reader = new FileReader();
@@ -194,9 +188,7 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
           ],
           referenceNotes: [
             note.trim(),
-            lookLabels
-              ? `${lang === 'ru' ? 'Образы ателье' : 'Atelier looks'}: ${lookLabels}`
-              : '',
+            lookLabels ? `Atelier looks: ${lookLabels}` : '',
           ]
             .filter(Boolean)
             .join('\n'),
@@ -205,8 +197,8 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
             whatsappPhone: whatsappPhone.trim(),
             telegramHandle: '',
             consultationType: 'virtual',
-            atelierLocation: lang === 'ru' ? 'Онлайн' : 'Online',
-            preferredLanguage: lang === 'ru' ? 'Русский' : 'English',
+            atelierLocation: 'Online',
+            preferredLanguage: 'English',
           },
           preferredChannel: 'whatsapp',
           consentAccepted: true,
@@ -396,11 +388,7 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
           onClick={() => {
             setError('');
             if (!acceptSaAgreement) {
-              setError(
-                lang === 'ru'
-                  ? 'Отметьте согласие с договором услуг, чтобы продолжить оплату.'
-                  : 'Confirm the service agreement to continue to payment.'
-              );
+              setError('Confirm the service agreement to continue to payment.');
               return;
             }
             if (!paypalReady) return;
@@ -665,7 +653,7 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
             >
               <Upload className="w-4 h-4 text-[#8C7D70]" />
               <span className="text-[11px] uppercase tracking-[0.14em] text-[#61564C]">
-                {lang === 'ru' ? 'Загрузить фото' : 'Upload photos'}
+                Upload photos
               </span>
             </button>
           )}
@@ -682,7 +670,7 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
                     type="button"
                     onClick={() => removePhoto(i)}
                     className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-[#1A1816]/85 text-white flex items-center justify-center"
-                    aria-label={lang === 'ru' ? 'Удалить' : 'Remove'}
+                    aria-label="Remove"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -738,7 +726,7 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
                       type="button"
                       onClick={() => toggleAtelierLook(look)}
                       className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-[#1A1816]/85 text-white flex items-center justify-center"
-                      aria-label={lang === 'ru' ? 'Удалить' : 'Remove'}
+                      aria-label="Remove"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>

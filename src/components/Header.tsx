@@ -14,7 +14,6 @@ interface HeaderProps {
   isMobileSimulator: boolean;
   onToggleSimulator: () => void;
   lang: SupportedLanguage;
-  onSelectLang: (lang: SupportedLanguage) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -28,7 +27,6 @@ export const Header: React.FC<HeaderProps> = ({
   isMobileSimulator,
   onToggleSimulator,
   lang,
-  onSelectLang,
 }) => {
   const t = TRANSLATIONS[lang];
   const showProgress =
@@ -47,7 +45,7 @@ export const Header: React.FC<HeaderProps> = ({
               id="back-button"
               type="button"
               onClick={onBack}
-              aria-label={lang === 'ru' ? 'Предыдущий шаг' : 'Previous step'}
+              aria-label="Previous step"
               className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[#1A1816] hover:bg-[#EFE9E1] transition-colors border border-[#E5DFD6]"
             >
               <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -59,43 +57,33 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Center: Brand Wordmark */}
         <div className="text-center cursor-pointer flex-1 px-0.5 min-w-0" onClick={() => !isDashboard && onBack()}>
-          <span className="font-serif text-[10px] sm:text-sm font-light tracking-[0.05em] sm:tracking-[0.07em] text-[#1A1816] uppercase block leading-tight">
+          <span className="font-serif text-[13px] sm:text-lg font-light tracking-[0.04em] sm:tracking-[0.06em] text-[#1A1816] uppercase block leading-tight">
             {t.brandName}
           </span>
-          <span className="text-[6px] sm:text-[8px] tracking-[0.1em] sm:tracking-[0.14em] text-[#867C74] uppercase block font-sans mt-0.5 leading-tight">
+          <span className="text-[7px] sm:text-[9px] tracking-[0.1em] sm:tracking-[0.14em] text-[#867C74] uppercase block font-sans mt-0.5 leading-tight">
             {t.brandTagline}
           </span>
         </div>
 
-        {/* Right: Language switch, Simulator & Dashboard */}
-        <div className="flex items-center gap-1 sm:gap-1.5 min-w-[28px] sm:min-w-[64px] justify-end shrink-0">
-          {/* Language Toggle: RU | EN */}
-          <div className="flex items-center rounded-full bg-[#EFEAE2] border border-[#DDD5C9] p-0.5 text-[9px] sm:text-[10px] font-medium tracking-wide">
-            <button
-              id="lang-ru-btn"
-              type="button"
-              onClick={() => onSelectLang('ru')}
-              className={`px-1.5 sm:px-2 py-0.5 rounded-full transition-all ${
-                lang === 'ru'
-                  ? 'bg-[#1A1816] text-[#FAF8F5] shadow-xs'
-                  : 'text-[#6D6359] hover:text-[#1A1816]'
-              }`}
-            >
-              RU
-            </button>
-            <button
-              id="lang-en-btn"
-              type="button"
-              onClick={() => onSelectLang('en')}
-              className={`px-1.5 sm:px-2 py-0.5 rounded-full transition-all ${
-                lang === 'en'
-                  ? 'bg-[#1A1816] text-[#FAF8F5] shadow-xs'
-                  : 'text-[#6D6359] hover:text-[#1A1816]'
-              }`}
-            >
-              EN
-            </button>
-          </div>
+        {/* Right: WhatsApp + Simulator & Dashboard */}
+        <div className="flex items-center gap-1.5 sm:gap-2 justify-end shrink-0">
+          <a
+            href="https://wa.me/27763643600"
+            target="_blank"
+            rel="noopener noreferrer"
+            id="header-whatsapp-consult"
+            className="inline-flex items-center gap-1 text-[#1A1816] hover:text-[#128C7E] transition-colors leading-tight"
+          >
+            <MessageCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#25D366] shrink-0" />
+            <span className="flex flex-col items-start text-left">
+              <span className="text-[7px] sm:text-[9px] uppercase tracking-[0.06em] font-medium">
+                {t.headerWhatsappLabel}
+              </span>
+              <span className="text-[8px] sm:text-[10px] font-light tracking-normal normal-case">
+                {t.headerWhatsappNumber}
+              </span>
+            </span>
+          </a>
 
           {/* Mobile frame simulator toggle for desktop testing */}
           <button
@@ -124,20 +112,6 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="hidden sm:inline">{isDashboard ? t.clientAppBtn : t.atelierDeskBtn}</span>
           </button>
         </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto mt-0.5 sm:mt-1 flex justify-end">
-        <a
-          href="https://wa.me/27763643600"
-          target="_blank"
-          rel="noopener noreferrer"
-          id="header-whatsapp-consult"
-          className="inline-flex items-center gap-1 text-[8px] sm:text-[10px] tracking-[0.05em] text-[#1A1816] hover:text-[#128C7E] transition-colors"
-        >
-          <MessageCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#25D366] shrink-0" />
-          <span className="uppercase font-medium">{t.headerWhatsappLabel}</span>
-          <span className="font-light tracking-normal normal-case">{t.headerWhatsappNumber}</span>
-        </a>
       </div>
 
       {/* Subtle Progress Line for Client questionnaire */}

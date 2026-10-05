@@ -76,8 +76,8 @@ const INITIAL_DOSSIER: ConsultationDossier = {
     telegramHandle: '',
     whatsappPhone: '',
     consultationType: 'atelier',
-    atelierLocation: 'Южная Африка',
-    preferredLanguage: 'Русский',
+    atelierLocation: 'South Africa',
+    preferredLanguage: 'English',
   },
   consentAccepted: false,
   consentAcceptedAt: '',
@@ -86,15 +86,7 @@ const INITIAL_DOSSIER: ConsultationDossier = {
 
 export default function App() {
   const [currentStep, setCurrentStep] = useState<StepKey>('welcome');
-  const [lang, setLang] = useState<SupportedLanguage>(() => {
-    try {
-      const saved = localStorage.getItem('margo_atelier_lang');
-      if (saved === 'ru' || saved === 'en') return saved;
-    } catch {
-      // ignore
-    }
-    return 'ru'; // Default to Russian as requested
-  });
+  const lang: SupportedLanguage = 'en';
 
   const [dossier, setDossier] = useState<ConsultationDossier>(() => {
     try {
@@ -191,15 +183,6 @@ export default function App() {
     }
   }, [dossier]);
 
-  // Save language preference to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('margo_atelier_lang', lang);
-    } catch {
-      // ignore
-    }
-  }, [lang]);
-
   const t = TRANSLATIONS[lang];
   const isSideFlow = SIDE_FLOWS.includes(currentStep);
   const currentIndex = STEP_ORDER.indexOf(currentStep);
@@ -274,7 +257,6 @@ export default function App() {
         isMobileSimulator={isMobileSimulator}
         onToggleSimulator={() => setIsMobileSimulator(!isMobileSimulator)}
         lang={lang}
-        onSelectLang={setLang}
       />
 
       {/* Main Content Area */}

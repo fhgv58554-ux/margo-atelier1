@@ -13,10 +13,14 @@ interface StepMeasurementsProps {
   lang: SupportedLanguage;
 }
 
-const SIZES_LOCALIZED: Record<SupportedLanguage, string[]> = {
-  ru: ['EU 34 (RU 40)', 'EU 36 (RU 42)', 'EU 38 (RU 44)', 'EU 40 (RU 46)', 'EU 42 (RU 48)', 'EU 44 (RU 50)'],
-  en: ['EU 34 (US 2)', 'EU 36 (US 4)', 'EU 38 (US 6)', 'EU 40 (US 8)', 'EU 42 (US 10)', 'EU 44 (US 12)'],
-};
+const SIZE_OPTIONS = [
+  'EU 34 (US 2)',
+  'EU 36 (US 4)',
+  'EU 38 (US 6)',
+  'EU 40 (US 8)',
+  'EU 42 (US 10)',
+  'EU 44 (US 12)',
+];
 
 export const StepMeasurements: React.FC<StepMeasurementsProps> = ({
   measurements,
@@ -26,7 +30,7 @@ export const StepMeasurements: React.FC<StepMeasurementsProps> = ({
 }) => {
   const t = TRANSLATIONS[lang];
   const fitPreferences = getFitPreferences(lang);
-  const sizeOptions = SIZES_LOCALIZED[lang];
+  const sizeOptions = SIZE_OPTIONS
   const selectedFits = Array.isArray(measurements.fitPreferences) ? measurements.fitPreferences : [];
   const needHelpId = 'need_help';
 

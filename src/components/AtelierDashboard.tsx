@@ -64,7 +64,7 @@ function authHeaders(token: string): HeadersInit {
   };
 }
 
-export const AtelierDashboard: React.FC<AtelierDashboardProps> = ({ onBackToApp, lang = 'ru' }) => {
+export const AtelierDashboard: React.FC<AtelierDashboardProps> = ({ onBackToApp, lang = 'en' }) => {
   const t = TRANSLATIONS[lang];
   const [token, setToken] = useState<string | null>(() => readStoredToken());
   const [password, setPassword] = useState('');
@@ -150,16 +150,10 @@ export const AtelierDashboard: React.FC<AtelierDashboardProps> = ({ onBackToApp,
         } else if (res.status === 401) {
           setLoginError(t.adminLoginErrorUnauthorized);
         } else if (res.status === 429) {
-          setLoginError(
-            lang === 'ru'
-              ? 'Слишком много попыток входа. Подождите несколько минут.'
-              : 'Too many login attempts. Please wait a few minutes.'
-          );
+          setLoginError('Too many login attempts. Please wait a few minutes.');
         } else if (res.status >= 500) {
           setLoginError(
-            lang === 'ru'
-              ? 'Сервер админки недоступен. Проверьте, что ADMIN_PASSWORD задан на хостинге, и перезапустите приложение.'
-              : 'Admin server error. Set ADMIN_PASSWORD on the host and restart the app.'
+            'Admin server error. Set ADMIN_PASSWORD on the host and restart the app.'
           );
         } else {
           setLoginError(typeof data.error === 'string' ? data.error : t.adminLoginError);
@@ -311,9 +305,7 @@ export const AtelierDashboard: React.FC<AtelierDashboardProps> = ({ onBackToApp,
                 className="mt-1.5 w-full px-3.5 py-2.5 rounded-xl bg-[#F6F1EA] border border-[#D9D1C5] text-sm text-[#1A1816] focus:outline-none focus:ring-1 focus:ring-[#1A1816]"
               />
               <p className="mt-1.5 text-[10px] text-[#8A8177]">
-                {lang === 'ru'
-                  ? 'Вводите пароль в латинской раскладке. Он задаётся в ADMIN_PASSWORD, не показывается здесь.'
-                  : 'Use a Latin keyboard layout. The password comes from ADMIN_PASSWORD and is not shown here.'}
+                Use a Latin keyboard layout. The password comes from ADMIN_PASSWORD and is not shown here.
               </p>
             </label>
             {loginError && <p className="text-xs text-[#A83D3D]">{loginError}</p>}
@@ -572,12 +564,12 @@ export const AtelierDashboard: React.FC<AtelierDashboardProps> = ({ onBackToApp,
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                       <div className="p-3 rounded-xl bg-[#FAF8F5] border border-[#E5DFD6]">
-                        <span className="text-[10px] uppercase tracking-wider text-[#8A7D71] block">Силуэт и стиль</span>
+                        <span className="text-[10px] uppercase tracking-wider text-[#8A7D71] block">Silhouette & style</span>
                         <div className="font-medium text-[#1A1816] mt-0.5">{silhouette || '—'}</div>
                         <div className="text-[#6B5F54] mt-0.5">{style || '—'}</div>
                       </div>
                       <div className="p-3 rounded-xl bg-[#FAF8F5] border border-[#E5DFD6]">
-                        <span className="text-[10px] uppercase tracking-wider text-[#8A7D71] block">Цвета</span>
+                        <span className="text-[10px] uppercase tracking-wider text-[#8A7D71] block">Colours</span>
                         <div className="font-medium text-[#1A1816] mt-0.5">
                           {Array.isArray(item.colors) && item.colors.length > 0 ? item.colors.join(', ') : '—'}
                         </div>
@@ -586,7 +578,7 @@ export const AtelierDashboard: React.FC<AtelierDashboardProps> = ({ onBackToApp,
                         )}
                       </div>
                       <div className="p-3 rounded-xl bg-[#FAF8F5] border border-[#E5DFD6]">
-                        <span className="text-[10px] uppercase tracking-wider text-[#8A7D71] block">Посадка</span>
+                        <span className="text-[10px] uppercase tracking-wider text-[#8A7D71] block">Fit</span>
                         <div className="font-medium text-[#1A1816] mt-0.5">
                           {item.measurements?.clothingSize || '—'} · {item.measurements?.height || '—'}
                         </div>
@@ -601,7 +593,7 @@ export const AtelierDashboard: React.FC<AtelierDashboardProps> = ({ onBackToApp,
                         )}
                       </div>
                       <div className="p-3 rounded-xl bg-[#FAF8F5] border border-[#E5DFD6]">
-                        <span className="text-[10px] uppercase tracking-wider text-[#8A7D71] block">Приоритеты / событие</span>
+                        <span className="text-[10px] uppercase tracking-wider text-[#8A7D71] block">Priorities / event</span>
                         <div className="text-[#6B5F54] mt-0.5">
                           {Array.isArray(item.priorities) && item.priorities.length > 0
                             ? item.priorities.join(', ')
@@ -614,7 +606,7 @@ export const AtelierDashboard: React.FC<AtelierDashboardProps> = ({ onBackToApp,
                         </div>
                         {item.consentAccepted && (
                           <div className="text-[10px] text-[#2E7A4C] mt-1">
-                            Согласие: да · {item.consentVersion || '—'}
+                            Consent: yes · {item.consentVersion || '—'}
                           </div>
                         )}
                       </div>
@@ -636,7 +628,7 @@ export const AtelierDashboard: React.FC<AtelierDashboardProps> = ({ onBackToApp,
                     )}
 
                     <div className="p-3 rounded-xl bg-[#FAF8F5] border border-[#E5DFD6]">
-                      <span className="text-[10px] uppercase tracking-wider text-[#8A7D71] block mb-1">Статус</span>
+                      <span className="text-[10px] uppercase tracking-wider text-[#8A7D71] block mb-1">Status</span>
                       <select
                         value={item.status || 'new'}
                         onChange={(e) => updateStatus(item.id!, e.target.value)}
@@ -653,7 +645,7 @@ export const AtelierDashboard: React.FC<AtelierDashboardProps> = ({ onBackToApp,
                     {item.referenceNotes && (
                       <div className="text-xs text-[#63574D]">
                         <span className="text-[10px] uppercase tracking-wider text-[#8A7D71] block mb-1">
-                          Заметки к референсам
+                          Reference notes
                         </span>
                         {item.referenceNotes}
                       </div>
@@ -662,7 +654,7 @@ export const AtelierDashboard: React.FC<AtelierDashboardProps> = ({ onBackToApp,
                     {item.references && item.references.length > 0 && (
                       <div>
                         <span className="text-[10px] font-medium uppercase tracking-wider text-[#8A7D71] block mb-2">
-                          Фото-референсы ({item.references.length})
+                          Photo references ({item.references.length})
                         </span>
                         <div className="grid grid-cols-3 gap-2.5">
                           {item.references.map((img, i) => (

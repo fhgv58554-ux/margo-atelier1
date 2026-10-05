@@ -2,19 +2,17 @@ export type TryOnPackage = 'one_look' | 'three_looks';
 
 export const TRYON_PACKAGES: Record<
   TryOnPackage,
-  { amount: string; currency: 'ZAR'; labelEn: string; labelRu: string }
+  { amount: string; currency: 'ZAR'; labelEn: string }
 > = {
   one_look: {
     amount: '350.00',
     currency: 'ZAR',
     labelEn: 'One look',
-    labelRu: 'Один образ',
   },
   three_looks: {
     amount: '750.00',
     currency: 'ZAR',
     labelEn: 'Three looks',
-    labelRu: 'Три образа',
   },
 };
 

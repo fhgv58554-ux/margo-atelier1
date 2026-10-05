@@ -91,7 +91,7 @@ export const StepPriorities: React.FC<StepPrioritiesProps> = ({ selected, onTogg
               : 'bg-[#E5DDD2] text-[#9E9488] cursor-not-allowed'
           }`}
         >
-          {isValid ? t.step09Continue(selected.length) : (lang === 'ru' ? 'Выберите приоритеты' : 'Select at Least 1 Priority')}
+          {isValid ? t.step09Continue(selected.length) : 'Select at Least 1 Priority'}
         </button>
       </motion.div>
     </motion.div>

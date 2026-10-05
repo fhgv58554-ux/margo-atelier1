@@ -48,7 +48,7 @@ export async function sendAdminDossierEmail(consultation: Consultation): Promise
     await transport.sendMail({
       from: smtp.from,
       to: smtp.to,
-      subject: `Досье ${consultation.id || ''} · MARGO Atelier`.trim(),
+      subject: `Dossier ${consultation.id || ''} · MARGO Atelier`.trim(),
       text: formatConsultationMessage(consultation),
       attachments: photoAttachments(consultation),
     });

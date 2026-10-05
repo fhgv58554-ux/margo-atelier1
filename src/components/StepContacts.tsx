@@ -153,7 +153,7 @@ export const StepContacts: React.FC<StepContactsProps> = ({
             <MapPin className="w-3.5 h-3.5 text-[#8C7D70]" />
             {t.step10VenueLabel}
           </label>
-          {/* Quick Segmented Options: Южная Африка & Онлайн */}
+          {/* Quick Segmented Options: South Africa & Online */}
           <div className="grid grid-cols-2 gap-2 mb-2.5">
             {atelierLocations.map((loc) => {
               const isSelected = contact.atelierLocation === loc.name;
@@ -204,7 +204,7 @@ export const StepContacts: React.FC<StepContactsProps> = ({
               : 'bg-[#E5DDD2] text-[#9E9488] cursor-not-allowed'
           }`}
         >
-          {isValid ? t.step10GenerateBtn : (lang === 'ru' ? 'Укажите ваше имя и контакт' : 'Please Provide Name & Contact')}
+          {isValid ? t.step10GenerateBtn : 'Please Provide Name & Contact'}
         </button>
       </motion.div>
     </motion.div>

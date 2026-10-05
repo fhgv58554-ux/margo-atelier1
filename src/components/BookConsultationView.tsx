@@ -67,8 +67,8 @@ export const BookConsultationView: React.FC<BookConsultationViewProps> = ({
             whatsappPhone: whatsappPhone.trim(),
             telegramHandle: '',
             consultationType: 'atelier',
-            atelierLocation: lang === 'ru' ? 'Южная Африка' : 'South Africa',
-            preferredLanguage: lang === 'ru' ? 'Русский' : 'English',
+            atelierLocation: 'South Africa',
+            preferredLanguage: 'English',
           },
           preferredChannel: 'whatsapp',
           consentAccepted: true,
@@ -145,7 +145,10 @@ export const BookConsultationView: React.FC<BookConsultationViewProps> = ({
       {/* Occasion */}
       <motion.section variants={microFadeUp} className="mb-6">
         <h3 className="text-[11px] uppercase tracking-[0.18em] text-[#61564C] mb-3 font-medium">
-          {t.step01Title} {t.step01TitleItalic}
+          {t.step01Title} {t.step01TitleItalic}{' '}
+          <span className="normal-case tracking-normal font-light">
+            ({t.bookOccasionHint})
+          </span>
         </h3>
         <div className="grid grid-cols-2 gap-2.5 items-stretch">
           {occasions.map((item) => {

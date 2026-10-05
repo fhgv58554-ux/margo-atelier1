@@ -17,10 +17,6 @@ export interface DossierVisualCardProps {
 }
 
 const EMPTY_VALUES = new Set([
-  'Не выбран',
-  'Не выбрана',
-  'Не указан',
-  'Не знаю',
   'Not selected',
   'Not specified',
   'Not sure',

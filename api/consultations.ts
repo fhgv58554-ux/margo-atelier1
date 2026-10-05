@@ -156,7 +156,7 @@ function rowToConsultation(row: any) {
       consultationType: contact.consultationType === 'virtual' ? 'virtual' : 'atelier',
       location: contact.location || contact.atelierLocation || '',
       atelierLocation: contact.atelierLocation || contact.location || '',
-      preferredLanguage: contact.preferredLanguage || 'Русский',
+      preferredLanguage: contact.preferredLanguage || 'English',
     },
     aiStyleDirection: row.ai_style_direction || undefined,
     consentAccepted: Boolean(row.consent_accepted),
@@ -213,7 +213,7 @@ function createConsultationFromBody(body: any) {
       consultationType: body.contact?.consultationType === 'virtual' ? 'virtual' : 'atelier',
       location: clip(body.contact?.atelierLocation || body.contact?.location, 120),
       atelierLocation: clip(body.contact?.atelierLocation || body.contact?.location, 120),
-      preferredLanguage: clip(body.contact?.preferredLanguage, 40) || 'Русский',
+      preferredLanguage: clip(body.contact?.preferredLanguage, 40) || 'English',
     },
     aiStyleDirection: body.aiStyleDirection,
     consentAccepted,
@@ -255,10 +255,10 @@ function formatConsultationMessage(consultation: ReturnType<typeof createConsult
     consultation.contact?.fullName || consultation.contact?.name || 'Guest Client';
 
   const OCCASION_NAMES: Record<string, string> = {
-    bridal: 'Свадебный образ',
-    evening: 'Вечерний образ',
-    special_occasion: 'Особое событие',
-    custom_dress: 'Платье на заказ',
+    bridal: 'Bridal look',
+    evening: 'Evening look',
+    special_occasion: 'Special occasion',
+    custom_dress: 'Custom dress',
   };
   const occasion =
     OCCASION_NAMES[consultation.occasion] || consultation.occasion || 'Atelier Consultation';
@@ -272,24 +272,24 @@ function formatConsultationMessage(consultation: ReturnType<typeof createConsult
   const settingsParts = [
     ...(Array.isArray(consultation.settings) ? consultation.settings : []),
     consultation.settingOther,
-    consultation.eventCity ? `Город/регион: ${consultation.eventCity}` : '',
+    consultation.eventCity ? `City/region: ${consultation.eventCity}` : '',
   ].filter(Boolean);
   const settingsStr = settingsParts.length > 0 ? settingsParts.join('; ') : '';
 
-  const budget = consultation.budget || 'Не указан';
-  const silhouette = consultation.silhouette || 'Не выбран';
-  const style = consultation.style || 'Не выбран';
+  const budget = consultation.budget || 'Not specified';
+  const silhouette = consultation.silhouette || 'Not selected';
+  const style = consultation.style || 'Not selected';
   const colours =
     Array.isArray(consultation.colors) && consultation.colors.length > 0
       ? consultation.colors.join(', ')
-      : 'Не указаны';
+      : 'Not specified';
   const colorNote = consultation.customColorNote?.trim()
-    ? `\nПожелания по цвету: ${consultation.customColorNote.trim()}`
+    ? `\nColour notes: ${consultation.customColorNote.trim()}`
     : '';
   const priorities =
     Array.isArray(consultation.priorities) && consultation.priorities.length > 0
       ? consultation.priorities.join(', ')
-      : 'Не указаны';
+      : 'Not specified';
 
   const m = consultation.measurements || ({} as any);
   const fit =
@@ -297,16 +297,16 @@ function formatConsultationMessage(consultation: ReturnType<typeof createConsult
       ? m.fitPreferences.join(', ')
       : m.fitPreference || '—';
   const measurementsStr = [
-    m.height ? `Рост: ${m.height}` : '',
-    m.clothingSize ? `Размер: ${m.clothingSize}` : '',
-    `Посадка: ${fit}`,
-    m.notes ? `Заметки: ${m.notes}` : '',
+    m.height ? `Height: ${m.height}` : '',
+    m.clothingSize ? `Size: ${m.clothingSize}` : '',
+    `Fit: ${fit}`,
+    m.notes ? `Notes: ${m.notes}` : '',
   ]
     .filter(Boolean)
     .join(' | ');
 
   const refNotes = consultation.referenceNotes?.trim()
-    ? `\nЗаметки к референсам: ${consultation.referenceNotes.trim()}`
+    ? `\nReference notes: ${consultation.referenceNotes.trim()}`
     : '';
   const refsCount = Array.isArray(consultation.references) ? consultation.references.length : 0;
 
@@ -318,12 +318,12 @@ function formatConsultationMessage(consultation: ReturnType<typeof createConsult
   const email = consultation.contact?.email;
   if (email) contactList.push(`Email: ${email}`);
   const location = consultation.contact?.atelierLocation || consultation.contact?.location;
-  if (location) contactList.push(`Локация: ${location}`);
+  if (location) contactList.push(`Location: ${location}`);
   const lang = consultation.contact?.preferredLanguage;
-  if (lang) contactList.push(`Язык: ${lang}`);
-  const contactStr = contactList.length > 0 ? contactList.join(' | ') : 'Не указаны';
+  if (lang) contactList.push(`Language: ${lang}`);
+  const contactStr = contactList.length > 0 ? contactList.join(' | ') : 'Not specified';
 
-  let aiSummary = 'Не сгенерировано';
+  let aiSummary = 'Not generated';
   if (consultation.aiStyleDirection) {
     const { headline, concept } = consultation.aiStyleDirection as any;
     if (headline && concept) aiSummary = `"${headline}"\n${concept}`;
@@ -332,14 +332,14 @@ function formatConsultationMessage(consultation: ReturnType<typeof createConsult
   }
 
   const consentLine = consultation.consentAccepted
-    ? `Согласие: да (${consultation.consentAcceptedAt || '—'}; v${consultation.consentVersion || '—'})`
-    : 'Согласие: не отмечено';
+    ? `Consent: yes (${consultation.consentAcceptedAt || '—'}; v${consultation.consentVersion || '—'})`
+    : 'Consent: not accepted';
 
   const channelLine =
     consultation.preferredChannel === 'whatsapp'
-      ? 'Канал отправки: WhatsApp'
+      ? 'Preferred channel: WhatsApp'
       : consultation.preferredChannel === 'telegram'
-        ? 'Канал отправки: Telegram'
+        ? 'Preferred channel: Telegram'
         : '';
 
   const header = consultation.id
@@ -348,17 +348,17 @@ function formatConsultationMessage(consultation: ReturnType<typeof createConsult
 
   return `${header}
 
-Клиент: ${clientName}
-Повод: ${occasion}
-Дата: ${dateStr}${settingsStr ? `\nФормат события: ${settingsStr}` : ''}
-Бюджет: ${budget}
-Силуэт: ${silhouette}
-Стиль: ${style}
-Цвета: ${colours}${colorNote}
-Посадка: ${measurementsStr || '—'}
-Приоритеты: ${priorities}
-Фото-референсы: ${refsCount}${refNotes}
-Контакты: ${contactStr}
+Client: ${clientName}
+Occasion: ${occasion}
+Date: ${dateStr}${settingsStr ? `\nEvent format: ${settingsStr}` : ''}
+Budget: ${budget}
+Silhouette: ${silhouette}
+Style: ${style}
+Colours: ${colours}${colorNote}
+Fit: ${measurementsStr || '—'}
+Priorities: ${priorities}
+Photo references: ${refsCount}${refNotes}
+Contacts: ${contactStr}
 ${consentLine}${channelLine ? `\n${channelLine}` : ''}
 
 AI STYLE DIRECTION:
@@ -409,7 +409,7 @@ async function sendAdminDossierEmail(
     await transport.sendMail({
       from,
       to,
-      subject: `Досье ${consultation.id || ''} · MARGO Atelier`.trim(),
+      subject: `Dossier ${consultation.id || ''} · MARGO Atelier`.trim(),
       text: formatConsultationMessage(consultation),
       attachments,
     });
@@ -459,7 +459,7 @@ async function sendTelegramNotification(
       try {
         const form = new FormData();
         form.append('chat_id', chatId);
-        form.append('caption', `Референс ${i + 1}/${refs.length} · ${consultation.id}`.slice(0, 1024));
+        form.append('caption', `Reference ${i + 1}/${refs.length} · ${consultation.id}`.slice(0, 1024));
         if (source.startsWith('data:')) {
           const match = source.match(/^data:([^;]+);base64,(.+)$/);
           if (!match) continue;
@@ -586,7 +586,7 @@ async function sendWhatsAppNotification(
           type: 'image',
           image: {
             id: mediaId,
-            caption: `Фото ${i + 1}/${refs.length} · ${consultation.id}`,
+            caption: `Photo ${i + 1}/${refs.length} · ${consultation.id}`,
           },
         }),
       });

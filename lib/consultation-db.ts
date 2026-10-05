@@ -133,7 +133,7 @@ export function rowToConsultation(row: ConsultationRow): Consultation {
       consultationType: contact.consultationType === 'virtual' ? 'virtual' : 'atelier',
       location: contact.location || contact.atelierLocation || '',
       atelierLocation: contact.atelierLocation || contact.location || '',
-      preferredLanguage: contact.preferredLanguage || 'Русский',
+      preferredLanguage: contact.preferredLanguage || 'English',
     },
     aiStyleDirection:
       row.ai_style_direction && typeof row.ai_style_direction === 'object'

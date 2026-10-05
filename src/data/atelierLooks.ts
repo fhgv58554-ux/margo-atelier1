@@ -52,39 +52,7 @@ function isExcluded(id: string, src: string): boolean {
   return EXCLUDED_FILENAME_PARTS.some((part) => path.includes(part.toLowerCase()));
 }
 
-const LABEL_RU: Record<string, string> = {
-  burgundy: 'Бордо',
-  orange: 'Оранж',
-  pink: 'Розовый',
-  dress: 'Платье',
-  result: 'Результат примерки',
-  bridal: 'Свадебный',
-  evening: 'Вечерний',
-  special: 'Особый случай',
-  custom: 'Индивидуальный пошив',
-  column: 'Колонна',
-  aline: 'А-силуэт',
-  slip: 'Слип',
-  coatdress: 'Платье-пальто',
-  mermaid: 'Русалка',
-  quiet: 'Quiet Luxury',
-  contemporary: 'Contemporary Romantic',
-  sculptural: 'Sculptural',
-  sensual: 'Sensual Siren',
-  cream: 'Кремовый',
-  sand: 'Песочный',
-  blue: 'Синий',
-  fabric: 'Ткань',
-  sage: 'Шалфей',
-  dawn: 'Рассвет',
-  sea: 'Море',
-  terrace: 'Терраса',
-  editorial: 'Editorial',
-  welcome: 'Hero',
-  blazer: 'Жакет',
-};
-
-function labelFromFilename(filename: string, lang: SupportedLanguage): string {
+function labelFromFilename(filename: string, _lang: SupportedLanguage): string {
   const base = filename
     .replace(/\.[^.]+$/, '')
     .replace(/^margo[_-]?/i, '')
@@ -92,17 +60,6 @@ function labelFromFilename(filename: string, lang: SupportedLanguage): string {
     .replace(/[_-]+/g, ' ')
     .trim();
 
-  if (lang === 'en') {
-    return base
-      .split(' ')
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(' ');
-  }
-
-  const lower = base.toLowerCase();
-  for (const [key, value] of Object.entries(LABEL_RU)) {
-    if (lower.includes(key)) return value;
-  }
   return base
     .split(' ')
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
@@ -123,22 +80,22 @@ export function getAtelierCatalogueLooks(lang: SupportedLanguage): AtelierLookIt
   pushUnique(looks, {
     id: 'tryon-burgundy',
     src: lookBurgundy,
-    label: lang === 'ru' ? 'Бордо' : 'Burgundy',
+    label: 'Burgundy',
   });
   pushUnique(looks, {
     id: 'tryon-orange',
     src: lookOrange,
-    label: lang === 'ru' ? 'Оранж' : 'Orange',
+    label: 'Orange',
   });
   pushUnique(looks, {
     id: 'tryon-pink',
     src: lookPink,
-    label: lang === 'ru' ? 'Розовый' : 'Pink',
+    label: 'Pink',
   });
   pushUnique(looks, {
     id: 'tryon-result',
     src: lookResult,
-    label: lang === 'ru' ? 'Результат примерки' : 'Try-on result',
+    label: 'Try-on result',
   });
 
   for (const item of getOccasions(lang)) {
