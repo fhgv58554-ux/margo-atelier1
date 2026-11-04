@@ -73,6 +73,7 @@ export const AtelierDashboard: React.FC<AtelierDashboardProps> = ({ onBackToApp,
 
   const [consultations, setConsultations] = useState<ConsultationDossier[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<'all' | 'new' | 'scheduled' | 'fitting' | 'archive'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -107,6 +108,9 @@ export const AtelierDashboard: React.FC<AtelierDashboardProps> = ({ onBackToApp,
       if (res.ok) {
         const data = await res.json();
         setConsultations(data.consultations || []);
+        setLoadError(null);
+      } else {
+        setLoadError(`Could not load dossiers (${res.status}).`);
       }
     } catch (err) {
       console.error('Failed to load consultations:', err);
@@ -116,6 +120,7 @@ export const AtelierDashboard: React.FC<AtelierDashboardProps> = ({ onBackToApp,
         return;
       }
       // Keep token — transient offline should not force re-login
+      setLoadError(err instanceof Error ? err.message : 'Database connection failed');
     } finally {
       if (attempt === 0) setLoading(false);
     }
@@ -432,7 +437,21 @@ export const AtelierDashboard: React.FC<AtelierDashboardProps> = ({ onBackToApp,
       </div>
 
       <div className="space-y-4">
-        {filtered.length === 0 ? (
+        {loadError ? (
+          <div className="p-8 text-center rounded-2xl bg-[#FBF3F1] border border-[#E8C9C2]">
+            <div className="font-serif text-lg font-light text-[#1A1816] mb-2">
+              Database connection failed
+            </div>
+            <p className="text-xs text-[#8A4A3F] leading-relaxed max-w-md mx-auto">{loadError}</p>
+            <button
+              type="button"
+              onClick={() => fetchConsultations(token || undefined)}
+              className="mt-4 px-4 py-2 rounded-full border border-[#1A1816] text-[11px] uppercase tracking-[0.14em] text-[#1A1816] hover:bg-[#1A1816] hover:text-[#FAF8F5] transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="p-12 text-center rounded-2xl bg-[#FAF8F5] border border-[#E8E1D6]">
             <Users className="w-8 h-8 text-[#B8AA99] mx-auto mb-2" />
             <div className="font-serif text-lg font-light text-[#1A1816]">{t.dashNoDossiers}</div>

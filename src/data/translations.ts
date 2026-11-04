@@ -136,6 +136,7 @@ export interface TranslationDict {
   step01Title: string;
   step01TitleItalic: string;
   step01Subtitle: string;
+  step01ImageHint: string;
   step01PhotoNote: string;
   step01Continue: string;
   step01SelectHint: string;
@@ -167,6 +168,7 @@ export interface TranslationDict {
   step03TitleItalic: string;
   step03Subtitle: string;
   step03Disclaimer: string;
+  step03ChooseHint: string;
   step03IncludedBadge: string;
   step03Continue: string;
   step03SelectHint: string;
@@ -179,6 +181,7 @@ export interface TranslationDict {
   step04Title: string;
   step04TitleItalic: string;
   step04Subtitle: string;
+  step04ImageHint: string;
   step04Note: string;
   step04Continue: string;
   step04SelectHint: string;
@@ -192,6 +195,7 @@ export interface TranslationDict {
   step05Title: string;
   step05TitleItalic: string;
   step05Subtitle: string;
+  step05ImageHint: string;
   step05Continue: string;
   step05SelectHint: string;
   step05PageFooterBrand: string;
@@ -401,6 +405,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDict> = {
     exploreIntroBody: [
       'Tell us about your event and choose looks you like. At the consultation we will discuss suitable silhouettes, fabrics and details — to select a ready dress or order from a chosen model.',
       'Atelier appointments are by prior booking. Online consultations are also available.',
+      'On each page of the questionnaire, choose an image or a menu option by clicking it. Then, at the bottom of the page, press the button to go to the next step.',
     ],
     exploreIntroNext: 'Continue',
     bookBadge: 'Quick request',
@@ -540,6 +545,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDict> = {
     step01TitleItalic: 'occasion',
     step01Subtitle:
       'Every piece begins with the context, light and atmosphere of the upcoming event.',
+    step01ImageHint: 'Click on one of the four images that you liked.',
     step01PhotoNote:
       'Images convey mood and style direction. Availability of models and the possibility of making will be confirmed at the consultation.',
     step01Continue: 'Next: about your event',
@@ -573,6 +579,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDict> = {
       'Choose a direction and a comfortable budget guide. This helps us prepare suitable proposals for your consultation.',
     step03Disclaimer:
       'The prices shown are preliminary guides. The final cost depends on the model, fabric, construction and finishing, and is agreed before production begins. All prices are shown in South African rand — ZAR / R.',
+    step03ChooseHint: 'Choose one of the three options.',
     step03IncludedBadge: 'Included:',
     step03Continue: 'Continue to Silhouette Line',
     step03SelectHint: 'Select an option',
@@ -585,6 +592,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDict> = {
     step04TitleItalic: 'do you like?',
     step04Subtitle:
       'Choose one or more options that feel close to you. At the fitting we will help refine the shape, fit and details around your wishes.',
+    step04ImageHint:
+      'Choose one or more images, and at the end of the page press the Next button.',
     step04Note:
       'Images help you choose a style direction. Fabric, colour, details and production options are discussed at the consultation.',
     step04Continue: 'Next: style and details',
@@ -599,6 +608,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDict> = {
     step05TitleItalic: 'your look?',
     step05Subtitle:
       'Restrained, romantic, expressive or sensual? Choose one or more directions that feel close to you. We will discuss the details at the consultation.',
+    step05ImageHint:
+      'Choose one or more images, and at the end of the page press the Next button.',
     step05Continue: 'Next: fabrics and colours',
     step05SelectHint: 'Select a direction',
     step05PageFooterBrand: 'MARGO Bridal & Special Occasion',

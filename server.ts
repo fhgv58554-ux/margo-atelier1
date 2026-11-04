@@ -26,6 +26,7 @@ import {
   parseTryOnPackage,
   TRYON_PACKAGES,
 } from './lib/paypal';
+import { isSupabaseConfigured } from './lib/supabase';
 
 const runningFromDist = /dist[/\\]server\.cjs$/.test(process.argv[1] || '');
 const isProduction =
@@ -73,7 +74,13 @@ function denyUnlessAdmin(req: express.Request, res: express.Response): boolean {
 }
 
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', atelier: 'MARGO Atelier', timestamp: new Date().toISOString() });
+  res.json({
+    status: 'ok',
+    atelier: 'MARGO Atelier',
+    timestamp: new Date().toISOString(),
+    storage: isSupabaseConfigured() ? 'supabase' : 'local-json',
+    adminConfigured: isAdminPasswordConfigured(),
+  });
 });
 
 function handleAdminLogin(req: express.Request, res: express.Response) {

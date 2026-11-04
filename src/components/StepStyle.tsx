@@ -54,6 +54,9 @@ export const StepStyle: React.FC<StepStyleProps> = ({
         <p className="text-xs sm:text-sm text-[#706459] mt-2 font-light leading-relaxed max-w-md mx-auto break-words">
           {t.step05Subtitle}
         </p>
+        <p className="text-xs sm:text-sm text-[#706459] mt-2 font-light leading-relaxed max-w-md mx-auto break-words">
+          {t.step05ImageHint}
+        </p>
       </motion.div>
 
       {/* Style cards */}

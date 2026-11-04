@@ -35,6 +35,9 @@ export const StepOccasion: React.FC<StepOccasionProps> = ({ selected, onSelect, 
         <p className="text-xs sm:text-sm text-[#706459] mt-1 font-light">
           {t.step01Subtitle}
         </p>
+        <p className="text-xs sm:text-sm text-[#706459] mt-2 font-light">
+          {t.step01ImageHint}
+        </p>
       </motion.div>
 
       {/* Visual Occasion Grid */}

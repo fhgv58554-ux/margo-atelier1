@@ -38,9 +38,15 @@ export const StepBudget: React.FC<StepBudgetProps> = ({ selected, onSelect, onNe
 
       <motion.p
         variants={microFadeUp}
-        className="text-[11px] sm:text-xs text-[#877C72] font-light leading-relaxed text-center mb-6 px-1 break-words"
+        className="text-[11px] sm:text-xs text-[#877C72] font-light leading-relaxed text-center mb-2 px-1 break-words"
       >
         {t.step03Disclaimer}
+      </motion.p>
+      <motion.p
+        variants={microFadeUp}
+        className="text-[11px] sm:text-xs text-[#877C72] font-light leading-relaxed text-center mb-6 px-1 break-words"
+      >
+        {t.step03ChooseHint}
       </motion.p>
 
       {/* Budget Tiers List */}

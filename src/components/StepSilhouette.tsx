@@ -54,6 +54,9 @@ export const StepSilhouette: React.FC<StepSilhouetteProps> = ({
         <p className="text-xs sm:text-sm text-[#706459] mt-2 font-light leading-relaxed max-w-md mx-auto break-words">
           {t.step04Subtitle}
         </p>
+        <p className="text-xs sm:text-sm text-[#706459] mt-2 font-light leading-relaxed max-w-md mx-auto break-words">
+          {t.step04ImageHint}
+        </p>
       </motion.div>
 
       {/* Silhouette Cards — vertical photo + text below */}
