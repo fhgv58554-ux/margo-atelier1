@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { Check, Plus, Upload, X } from 'lucide-react';
-import { PayPalButtons, PayPalScriptProvider } from '@paypal/react-paypal-js';
 import { SupportedLanguage, TRANSLATIONS } from '../data/translations';
 import { AtelierLookItem, getAtelierCatalogueLooks } from '../data/atelierLooks';
 import { CONSENT_VERSION } from './WelcomeView';
@@ -17,7 +16,48 @@ interface VirtualTryOnViewProps {
 }
 
 type TryOnPackage = 'one_look' | 'three_looks';
-type Phase = 'form' | 'tariff' | 'payment' | 'success';
+type Phase = 'form' | 'tariff' | 'payment' | 'confirming' | 'success';
+
+const TRYON_DRAFT_KEY = 'margo_tryon_payment_draft';
+
+type TryOnDraft = {
+  packageKey: TryOnPackage;
+  fullName: string;
+  whatsappPhone: string;
+  note: string;
+  photos: string[];
+  atelierLooks: AtelierLook[];
+};
+
+let paymentReturnPromise: Promise<void> | null = null;
+let paidDossierId = '';
+
+function paymentReturnUrl(): string {
+  const url = new URL(window.location.href);
+  url.search = '';
+  url.hash = '';
+  url.searchParams.set('tryon', 'paid');
+  return url.toString();
+}
+
+function yocoCheckoutUrl(payUrl: string): string {
+  const url = new URL(payUrl);
+  url.searchParams.set('redirectOnPaymentSuccess', paymentReturnUrl());
+  return url.toString();
+}
+
+function readTryOnDraft(): TryOnDraft | null {
+  try {
+    const raw = sessionStorage.getItem(TRYON_DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as TryOnDraft;
+    if (parsed?.packageKey !== 'one_look' && parsed?.packageKey !== 'three_looks') return null;
+    if (!parsed.fullName || !Array.isArray(parsed.photos)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
 
 type AtelierLook = AtelierLookItem;
 
@@ -26,9 +66,22 @@ const MAX_ATELIER_LOOKS = 3;
 const MAX_BYTES = 8 * 1024 * 1024;
 const ALLOWED = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
 
-const PACKAGE_META: Record<TryOnPackage, { amount: string; priceLabel: string }> = {
-  one_look: { amount: '350.00', priceLabel: 'R350' },
-  three_looks: { amount: '750.00', priceLabel: 'R750' },
+const PACKAGE_META: Record<
+  TryOnPackage,
+  { amount: string; priceLabel: string; reference: string; payUrl: string }
+> = {
+  one_look: {
+    amount: '350.00',
+    priceLabel: 'R350',
+    reference: 'Single-Look',
+    payUrl: 'https://pay.yoco.com/margo?amount=350.00&reference=Single-Look',
+  },
+  three_looks: {
+    amount: '750.00',
+    priceLabel: 'R750',
+    reference: '3-Looks',
+    payUrl: 'https://pay.yoco.com/margo?amount=750.00&reference=3-Looks',
+  },
 };
 
 export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBackHome }) => {
@@ -47,40 +100,11 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [acceptSaAgreement, setAcceptSaAgreement] = useState(false);
-  const [payStarted, setPayStarted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const paypalBoxRef = useRef<HTMLDivElement>(null);
   const [dossierId, setDossierId] = useState('');
   const [error, setError] = useState('');
-  const [paypalClientId, setPaypalClientId] = useState('');
-  const [paypalReady, setPaypalReady] = useState(false);
-  const [paypalConfigured, setPaypalConfigured] = useState(true);
 
   const catalogueLooks = getAtelierCatalogueLooks(lang);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch('/api/paypal/config');
-        const data = await res.json().catch(() => ({}));
-        if (cancelled) return;
-        if (data?.configured && data?.clientId) {
-          setPaypalClientId(String(data.clientId));
-          setPaypalConfigured(true);
-        } else {
-          setPaypalConfigured(false);
-        }
-      } catch {
-        if (!cancelled) setPaypalConfigured(false);
-      } finally {
-        if (!cancelled) setPaypalReady(true);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const canOrder =
     fullName.trim().length > 1 &&
@@ -149,20 +173,17 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
     setUploadError('');
   };
 
-  const submitAfterPayment = async (payment: {
-    orderId: string;
-    packageKey: TryOnPackage;
-    amount: string;
-    currency: string;
-  }) => {
+  const submitPaidOrder = async (draft: TryOnDraft) => {
+    const pack = PACKAGE_META[draft.packageKey];
     setSubmitting(true);
     setError('');
+    setPhase('confirming');
     try {
       const packLabel =
-        payment.packageKey === 'one_look' ? t.tryonTariffOneTitle : t.tryonTariffThreeTitle;
-      const lookLabels = atelierLooks.map((look) => look.label).join(', ');
-      const personalRefs = photos.map(toAbsoluteUrl);
-      const atelierRefs = atelierLooks.map((look) => toAbsoluteUrl(look.src));
+        draft.packageKey === 'one_look' ? t.tryonTariffOneTitle : t.tryonTariffThreeTitle;
+      const lookLabels = draft.atelierLooks.map((look) => look.label).join(', ');
+      const personalRefs = draft.photos.map(toAbsoluteUrl);
+      const atelierRefs = draft.atelierLooks.map((look) => toAbsoluteUrl(look.src));
       const res = await fetch('/api/consultations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -170,7 +191,7 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
           occasion: 'special_occasion',
           date: '',
           timeline: 'Flexible',
-          budget: `${payment.amount} ${payment.currency}`,
+          budget: `${pack.amount} ZAR`,
           silhouette: lookLabels,
           style: 'Virtual Try-On',
           colors: [],
@@ -179,22 +200,22 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
           priorities: [
             'Virtual Try-On order',
             `Package: ${packLabel}`,
-            `PayPal: ${payment.orderId}`,
-            `Amount: ${payment.amount} ${payment.currency}`,
-            `Personal photos: ${photos.length}`,
+            `Yoco: ${pack.reference}`,
+            `Amount: ${pack.amount} ZAR`,
+            `Personal photos: ${draft.photos.length}`,
             `Atelier looks: ${lookLabels || '—'}`,
             'SA service agreement accepted',
-            'Paid via PayPal',
+            'Paid via Yoco',
           ],
           referenceNotes: [
-            note.trim(),
+            draft.note.trim(),
             lookLabels ? `Atelier looks: ${lookLabels}` : '',
           ]
             .filter(Boolean)
             .join('\n'),
           contact: {
-            fullName: fullName.trim(),
-            whatsappPhone: whatsappPhone.trim(),
+            fullName: draft.fullName.trim(),
+            whatsappPhone: draft.whatsappPhone.trim(),
             telegramHandle: '',
             consultationType: 'virtual',
             atelierLocation: 'Online',
@@ -210,7 +231,12 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.consultation?.id) {
-        setDossierId(data.consultation.id);
+        paidDossierId = data.consultation.id;
+        sessionStorage.removeItem(TRYON_DRAFT_KEY);
+        const clean = new URL(window.location.href);
+        clean.searchParams.delete('tryon');
+        window.history.replaceState({}, '', `${clean.pathname}${clean.search}${clean.hash}`);
+        setDossierId(paidDossierId);
         setPhase('success');
       } else {
         setError(typeof data?.error === 'string' ? data.error : t.tryonError);
@@ -221,6 +247,61 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
       setSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tryon') !== 'paid') return;
+
+    let active = true;
+    const showResult = () => {
+      if (!active) return;
+      if (paidDossierId) {
+        setDossierId(paidDossierId);
+        setPhase('success');
+        return;
+      }
+      setPhase('confirming');
+    };
+
+    if (!paymentReturnPromise) {
+      const draft = readTryOnDraft();
+      if (!draft) {
+        setPhase('confirming');
+        setError('We could not match this payment to your order. Please contact the atelier on WhatsApp.');
+        return;
+      }
+      setPhase('confirming');
+      paymentReturnPromise = submitPaidOrder(draft);
+    } else {
+      showResult();
+    }
+
+    void paymentReturnPromise.then(() => {
+      showResult();
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (phase === 'confirming') {
+    return (
+      <motion.div
+        variants={staggerContainer(0.05, 0.03)}
+        initial="initial"
+        animate="animate"
+        className="w-full max-w-xl mx-auto px-4 py-16 text-center"
+      >
+        <motion.h2 variants={microFadeUp} className="font-serif text-2xl font-light mb-3">
+          {error ? 'Payment received' : 'Confirming your payment…'}
+        </motion.h2>
+        <motion.p variants={microFadeUp} className="text-sm text-[#61574D] font-light">
+          {error || 'Your order number will appear as soon as the payment is confirmed.'}
+        </motion.p>
+      </motion.div>
+    );
+  }
 
   if (phase === 'success' && dossierId) {
     return (
@@ -305,7 +386,6 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
               onClick={() => {
                 setSelectedPackage(item.key);
                 setAcceptSaAgreement(false);
-                setPayStarted(false);
                 setError('');
                 setPhase('payment');
               }}
@@ -380,113 +460,41 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
           </p>
         )}
 
-        <motion.button
+        <motion.a
           variants={microFadeUp}
-          type="button"
           id="tryon-pay-btn"
-          disabled={submitting}
-          onClick={() => {
+          href={acceptSaAgreement ? yocoCheckoutUrl(pack.payUrl) : undefined}
+          aria-disabled={!acceptSaAgreement}
+          onClick={(e) => {
             setError('');
             if (!acceptSaAgreement) {
+              e.preventDefault();
               setError('Confirm the service agreement to continue to payment.');
               return;
             }
-            if (!paypalReady) return;
-            if (!paypalConfigured || !paypalClientId) {
-              setError(t.tryonPayNotConfigured);
-              return;
+            const draft: TryOnDraft = {
+              packageKey: selectedPackage,
+              fullName,
+              whatsappPhone,
+              note,
+              photos,
+              atelierLooks,
+            };
+            try {
+              sessionStorage.setItem(TRYON_DRAFT_KEY, JSON.stringify(draft));
+            } catch {
+              e.preventDefault();
+              setError('Could not save your order before payment. Try fewer or smaller photos.');
             }
-            setPayStarted(true);
-            requestAnimationFrame(() => {
-              paypalBoxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            });
           }}
-          className={`w-full py-4 px-5 rounded-full text-xs font-medium tracking-[0.14em] uppercase border transition-all mb-3 ${
-            acceptSaAgreement && !submitting
+          className={`w-full py-4 px-5 rounded-full text-xs font-medium tracking-[0.14em] uppercase border transition-all mb-3 text-center ${
+            acceptSaAgreement
               ? 'bg-[#1A1816] text-[#FAF8F5] border-[#1A1816] hover:bg-[#2C2723] cursor-pointer'
               : 'bg-[#E5DDD2] text-[#9E9488] border-[#E5DDD2] cursor-pointer'
           }`}
         >
-          {submitting ? t.tryonPayLoading : t.tryonPayBtn}
-        </motion.button>
-
-        {payStarted && acceptSaAgreement && (
-          <motion.div
-            ref={paypalBoxRef}
-            variants={microFadeUp}
-            className="mb-4 min-h-[48px]"
-            id="tryon-paypal-buttons"
-          >
-            {!paypalReady || submitting ? (
-              <p className="text-center text-xs text-[#7A6E63] py-4">{t.tryonPayLoading}</p>
-            ) : !paypalConfigured || !paypalClientId ? (
-              <p className="text-center text-xs text-[#A14A3A] py-4">{t.tryonPayNotConfigured}</p>
-            ) : (
-              <PayPalScriptProvider
-                options={{
-                  clientId: paypalClientId,
-                  currency: 'ZAR',
-                  intent: 'capture',
-                  components: 'buttons',
-                }}
-              >
-                <PayPalButtons
-                  style={{ layout: 'vertical', shape: 'pill', label: 'pay' }}
-                  disabled={submitting}
-                  forceReRender={[selectedPackage]}
-                  createOrder={async () => {
-                    setError('');
-                    const res = await fetch('/api/paypal/create-order', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ package: selectedPackage }),
-                    });
-                    const data = await res.json().catch(() => ({}));
-                    if (!res.ok || !data?.id) {
-                      throw new Error(typeof data?.error === 'string' ? data.error : t.tryonPayError);
-                    }
-                    return data.id as string;
-                  }}
-                  onApprove={async (data) => {
-                    setError('');
-                    setSubmitting(true);
-                    try {
-                      const res = await fetch('/api/paypal/capture-order', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ orderId: data.orderID }),
-                      });
-                      const captured = await res.json().catch(() => ({}));
-                      if (!res.ok || captured?.status !== 'COMPLETED') {
-                        setError(
-                          typeof captured?.error === 'string' ? captured.error : t.tryonPayError
-                        );
-                        setSubmitting(false);
-                        return;
-                      }
-                      await submitAfterPayment({
-                        orderId: String(captured.id || data.orderID),
-                        packageKey: selectedPackage,
-                        amount: String(captured.amount || pack.amount),
-                        currency: String(captured.currency || 'ZAR'),
-                      });
-                    } catch {
-                      setError(t.tryonPayError);
-                      setSubmitting(false);
-                    }
-                  }}
-                  onError={() => {
-                    setError(t.tryonPayError);
-                    setSubmitting(false);
-                  }}
-                  onCancel={() => {
-                    setSubmitting(false);
-                  }}
-                />
-              </PayPalScriptProvider>
-            )}
-          </motion.div>
-        )}
+          {t.tryonPayBtn}
+        </motion.a>
 
         <motion.button
           variants={microFadeUp}
@@ -494,7 +502,6 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
           disabled={submitting}
           onClick={() => {
             setPhase('tariff');
-            setPayStarted(false);
             setError('');
           }}
           className="w-full py-2 text-[10px] uppercase tracking-[0.16em] text-[#8A8177] hover:text-[#54493F] disabled:opacity-50"

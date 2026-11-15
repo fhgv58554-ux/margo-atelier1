@@ -85,7 +85,15 @@ const INITIAL_DOSSIER: ConsultationDossier = {
 };
 
 export default function App() {
-  const [currentStep, setCurrentStep] = useState<StepKey>('welcome');
+  const [currentStep, setCurrentStep] = useState<StepKey>(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tryon') === 'paid') return 'virtual_tryon';
+    } catch {
+      // ignore
+    }
+    return 'welcome';
+  });
   const lang: SupportedLanguage = 'en';
 
   const [dossier, setDossier] = useState<ConsultationDossier>(() => {
