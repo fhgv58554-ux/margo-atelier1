@@ -19,6 +19,7 @@ type TryOnPackage = 'one_look' | 'three_looks';
 type Phase = 'form' | 'tariff' | 'payment' | 'confirming' | 'success';
 
 const TRYON_DRAFT_KEY = 'margo_tryon_payment_draft';
+const TRYON_ORDER_KEY = 'margo_tryon_order_id';
 
 type TryOnDraft = {
   packageKey: TryOnPackage;
@@ -40,9 +41,11 @@ function paymentReturnUrl(): string {
   return url.toString();
 }
 
-function yocoCheckoutUrl(payUrl: string): string {
+function yocoCheckoutUrl(payUrl: string, orderId: string): string {
+  const back = new URL(paymentReturnUrl());
+  back.searchParams.set('order', orderId);
   const url = new URL(payUrl);
-  url.searchParams.set('redirectOnPaymentSuccess', paymentReturnUrl());
+  url.searchParams.set('redirectOnPaymentSuccess', back.toString());
   return url.toString();
 }
 
@@ -173,11 +176,11 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
     setUploadError('');
   };
 
-  const submitPaidOrder = async (draft: TryOnDraft) => {
+  const submitPaidOrder = async (draft: TryOnDraft, showSuccess = true) => {
     const pack = PACKAGE_META[draft.packageKey];
     setSubmitting(true);
     setError('');
-    setPhase('confirming');
+    if (showSuccess) setPhase('confirming');
     try {
       const packLabel =
         draft.packageKey === 'one_look' ? t.tryonTariffOneTitle : t.tryonTariffThreeTitle;
@@ -205,7 +208,7 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
             `Personal photos: ${draft.photos.length}`,
             `Atelier looks: ${lookLabels || '—'}`,
             'SA service agreement accepted',
-            'Paid via Yoco',
+            'Yoco checkout opened',
           ],
           referenceNotes: [
             draft.note.trim(),
@@ -233,11 +236,19 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
       if (res.ok && data.consultation?.id) {
         paidDossierId = data.consultation.id;
         sessionStorage.removeItem(TRYON_DRAFT_KEY);
-        const clean = new URL(window.location.href);
-        clean.searchParams.delete('tryon');
-        window.history.replaceState({}, '', `${clean.pathname}${clean.search}${clean.hash}`);
-        setDossierId(paidDossierId);
-        setPhase('success');
+        try {
+          localStorage.setItem(TRYON_ORDER_KEY, paidDossierId);
+        } catch {
+          // return URL still carries the id
+        }
+        if (showSuccess) {
+          const clean = new URL(window.location.href);
+          clean.searchParams.delete('tryon');
+          clean.searchParams.delete('order');
+          window.history.replaceState({}, '', `${clean.pathname}${clean.search}${clean.hash}`);
+          setDossierId(paidDossierId);
+          setPhase('success');
+        }
       } else {
         setError(typeof data?.error === 'string' ? data.error : t.tryonError);
       }
@@ -251,6 +262,25 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('tryon') !== 'paid') return;
+
+    const orderFromUrl = params.get('order') || '';
+    let orderFromStore = '';
+    try {
+      orderFromStore = localStorage.getItem(TRYON_ORDER_KEY) || '';
+    } catch {
+      orderFromStore = '';
+    }
+    const orderId = orderFromUrl || orderFromStore || paidDossierId;
+    if (orderId) {
+      paidDossierId = orderId;
+      setDossierId(orderId);
+      setPhase('success');
+      const clean = new URL(window.location.href);
+      clean.searchParams.delete('tryon');
+      clean.searchParams.delete('order');
+      window.history.replaceState({}, '', `${clean.pathname}${clean.search}${clean.hash}`);
+      return;
+    }
 
     let active = true;
     const showResult = () => {
@@ -460,15 +490,14 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
           </p>
         )}
 
-        <motion.a
+        <motion.button
           variants={microFadeUp}
+          type="button"
           id="tryon-pay-btn"
-          href={acceptSaAgreement ? yocoCheckoutUrl(pack.payUrl) : undefined}
-          aria-disabled={!acceptSaAgreement}
-          onClick={(e) => {
+          disabled={submitting}
+          onClick={() => {
             setError('');
             if (!acceptSaAgreement) {
-              e.preventDefault();
               setError('Confirm the service agreement to continue to payment.');
               return;
             }
@@ -483,18 +512,30 @@ export const VirtualTryOnView: React.FC<VirtualTryOnViewProps> = ({ lang, onBack
             try {
               sessionStorage.setItem(TRYON_DRAFT_KEY, JSON.stringify(draft));
             } catch {
-              e.preventDefault();
               setError('Could not save your order before payment. Try fewer or smaller photos.');
+              return;
             }
+            void submitPaidOrder(draft, false).then(() => {
+              if (!paidDossierId) {
+                setPhase('payment');
+                return;
+              }
+              try {
+                localStorage.setItem(TRYON_ORDER_KEY, paidDossierId);
+              } catch {
+                // the return URL still carries the order id
+              }
+              window.location.assign(yocoCheckoutUrl(pack.payUrl, paidDossierId));
+            });
           }}
           className={`w-full py-4 px-5 rounded-full text-xs font-medium tracking-[0.14em] uppercase border transition-all mb-3 text-center ${
-            acceptSaAgreement
+            acceptSaAgreement && !submitting
               ? 'bg-[#1A1816] text-[#FAF8F5] border-[#1A1816] hover:bg-[#2C2723] cursor-pointer'
               : 'bg-[#E5DDD2] text-[#9E9488] border-[#E5DDD2] cursor-pointer'
           }`}
         >
-          {t.tryonPayBtn}
-        </motion.a>
+          {submitting ? t.tryonPayLoading : t.tryonPayBtn}
+        </motion.button>
 
         <motion.button
           variants={microFadeUp}
